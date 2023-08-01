@@ -9,6 +9,7 @@ from sklearn.preprocessing import StandardScaler
 # Helper functions
 nll_grad = lambda y_pred, y_true: y_pred - y_true
 
+
 def sigmoid(x):
     return 1 / (1 + np.exp(np.clip(-x, -709, 709)))
 
@@ -46,28 +47,49 @@ class DenseLayer(Layer):
         self.weights = weights
         self.bias = bias
 
-    def forward(self, input_data):
-        self.input_data = input_data
-        z = np.dot(self.weights, self.input_data) + self.bias
-        self.z = z
+    def forward(self, x):
+        self.x = x
+        z = np.dot(self.weights, self.x) + self.bias
         return self.activation(z)
 
     def backward(self, output_gradient, alpha):
-        activation_gradient = (self.activation(self.z) * (1 - self.activation(self.z)))
-        weights_gradient = np.dot(output_gradient * activation_gradient, self.input_data.T)
-        self.bias -= alpha * output_gradient * activation_gradient
-        output_gradient = np.dot(self.weights.T, output_gradient * activation_gradient)
+        activation_gradient = np.mean(self.activation(self.x) * (1 - self.activation(self.x)))
+        weights_gradient = np.dot(output_gradient * activation_gradient, self.x.T)
         self.weights -= alpha * weights_gradient
-        return output_gradient
+        self.bias -= alpha * output_gradient * activation_gradient
+        return np.dot(self.weights.T, output_gradient)
 
-class classificationNet():
-    def __init__(self, output_shape=1):
+class NeuralNet():
+    def __init__(self):
         self.network = None
 
-    def create_network(self, layers_list):
-        network = layers_list
-        self.network = network
+    def create_network(self, net):
+        network = None
+        if isinstance(net, list) and all(isinstance(layer, Layer) for layer in net):
+            network = net
+            self.network = network
+        elif isinstance(net, list) and all(isinstance(layer_data, dict) for layer_data in net):
+            print("Creating a neural network...")
+            network = []
+            for layer_data in net:
+                if layer_data['type'] == 'DenseLayer':
+                    network.append(DenseLayer(layer_data['input_shape'],
+                                            layer_data['output_shape'], 
+                                            activation=layer_data['activation_function']))
+            self.network = network
+        else:
+            raise TypeError("Invalid form of input to create a neural network.")
         return network
+
+    def forward(self, input_data):
+        input_data = self.network[0].forward(input_data.T)
+        for layer in self.network[1:]:
+            input_data = layer.forward(input_data)
+        return input_data
+
+    def backward(self, output_gradient, alpha):
+        for layer in reversed(self.network):
+            output_gradient = layer.backward(output_gradient, alpha)
 
     def get_weights(self):
         weights_and_biases = []
@@ -87,39 +109,32 @@ class classificationNet():
             if isinstance(layer, DenseLayer):
                 layer.set_weights(initial_weights[index], initial_weights[index + 1].reshape(-1, 1))
 
-    def network_topology(self):
-        topology_string = ""
-        depth = 0
+    def get_network_topology(self):
+        layers = []
         for layer in self.network:
             if isinstance(layer, DenseLayer):
-                layer_str = f"Dense({layer.shape}, activation={layer.activation.__name__})"
-                depth += 1
+                #layer_str = f"DenseLayer({layer.shape}, activation={layer.activation.__name__})"
+                layer_data = {
+                    'type': 'DenseLayer',
+                    'shape': layer.shape,
+                    'input_shape': layer.shape[0],
+                    'output_shape': layer.shape[1],
+                    'activation_function': f'{layer.activation.__name__}',
+                    #'weights': layer.weights.tolist(),
+                    #'bias': layer.bias.tolist(),
+                }
+                layers.append(layer_data)
             else:
+                # for later layer types
                 continue
-            topology_string += layer_str + " -> "
-        # Remove the final " -> "
-        topology_string = topology_string[:-depth]
-        return topology_string
+        return layers 
 
     def to_json(self, file_path=None):
         model_data = {
-            'network_topology': self.network_topology(),
+            'network_topology': self.get_network_topology(),
             'input_size': self.network[0].shape[0],
             'output_size': self.network[-1].shape[1],
-            'layers': [],
         }
-
-        for layer in self.network:
-            if isinstance(layer, DenseLayer):
-                layer_data = {
-                    'type': 'Dense',
-                    'shape': layer.shape,
-                    'activation_function': f'{layer.activation.__name__}',
-                    'weights': layer.weights.tolist(),
-                    'bias': layer.bias.tolist(),
-                }
-                model_data['layers'].append(layer_data)
-
         json_data = json.dumps(model_data)
 
         if file_path:
@@ -129,16 +144,6 @@ class classificationNet():
 
         return json_data
 
-
-    def forward(self, x):
-        x = self.network[0].forward(x.T)
-        for layer in self.network[1:]:
-            x = layer.forward(x)
-        return x
-
-    def backward(self, output_gradient, alpha):
-        for layer in reversed(self.network):
-            output_gradient = layer.backward(output_gradient, alpha)
 
     def fit(self, network, data_train, data_valid, loss, learning_rate, batch_size, epochs):
         patience=5
@@ -227,16 +232,14 @@ class classificationNet():
         for index, (x_i, y_i) in enumerate(zip(x_test, y_test)):
             y_pred = (self.forward(x_i.reshape(1, -1))).reshape(1, -1)
             print('y_pred:', y_pred)
-            error = ((y_pred - y_i) ** 2 / 2).reshape(-1, 1)#.reshape(1, -1))
-            print('Error:', error)
-            grad = (y_pred - y_i).reshape(-1, 1)#.reshape(1, -1))
-            print('grad:', grad)
+            grad = ((y_pred - y_i) ** 2 / 2).reshape(-1, 1)#.reshape(1, -1))
+            print('Error:', grad)
             self.backward(grad, alpha)
 
-def loss_(y, y_hat, eps=1e-15):
-    y_hat = np.clip(y_hat, eps, 1 - eps)
-    loss = -np.mean(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
-    return float(loss)
+    def loss_(y, y_hat, eps=1e-15):
+        y_hat = np.clip(y_hat, eps, 1 - eps)
+        loss = -np.mean(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
+        return float(loss)
 
 def convert_to_binary_pred(y_pred, threshold=0.5):
     max_index = np.argmax(y_pred)
@@ -348,6 +351,26 @@ def plot_compare(x, y ,net, net1):
 
     plt.show()
 
+def prediction():
+    weights_path = 'saved_model_weights.npy'
+    config_path = 'saved_model_config.json'
+
+    weights = np.load(weights_path, allow_pickle=True)
+    with open(config_path, 'r') as file:
+        json_config = json.load(file)
+    config = json.loads(json_config)
+
+    #print(weights)
+    #print(config, type(config))
+    #print(config['network_topology'])
+    #for key, value in config.items():
+    #    print(f"{key}: {value}")
+
+    print(config['network_topology'])
+    model = NeuralNet()
+    model.create_network(config['network_topology'])
+
+
 if __name__ == "__main__":
     np.random.seed(0)
 
@@ -361,7 +384,7 @@ if __name__ == "__main__":
     # Combine x_val and y_val as data_valid
     data_valid = np.hstack((x_val, y_val))
 
-    model = classificationNet(output_shape=2)
+    model = NeuralNet(output_shape=2)
     network = model.create_network([
         DenseLayer(30, 20, activation=sigmoid),
         DenseLayer(20, 10, activation=sigmoid, weights_initializer='heUniform'),
@@ -369,6 +392,6 @@ if __name__ == "__main__":
         DenseLayer(2, 2, activation=softmax, weights_initializer='heUniform')
         ])
 
-    model.fit(network, data_train, data_valid, loss=loss_, learning_rate=1e-3, batch_size=8, epochs=70)
+    #model.fit(network, data_train, data_valid, loss=loss_, learning_rate=1e-3, batch_size=8, epochs=70)
     #save(model)
-    #model.predict(data_train)
+    prediction()
