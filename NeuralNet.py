@@ -1,65 +1,9 @@
 import numpy as np
 import json
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
-
-# Helper functions
-nll_grad = lambda y_pred, y_true: y_pred - y_true
-
-
-def sigmoid(x):
-    return 1 / (1 + np.exp(np.clip(-x, -709, 709)))
-
-def softmax(x):
-    exp_x = np.exp(x - np.max(x, axis=0, keepdims=True))
-    return exp_x / np.sum(exp_x, axis=0, keepdims=True)
-
-def heUniform(shape):
-    fan_in, _ = shape
-    limit = np.sqrt(6 / fan_in)
-    return np.random.uniform(-limit, limit, shape)
-
-class Layer:
-    def __init__(self):
-        self.x = None
-        self.y = None
-
-    def forward(self, x):
-        pass
-
-    def backward(self, output_gradient, alpha):
-        pass
-
-class DenseLayer(Layer):
-    def __init__(self, input_shape, output_shape, activation, weights_initializer=heUniform):
-        self.shape = (input_shape, output_shape)
-        self.weights = np.random.randn(output_shape, input_shape)
-        self.bias = np.random.randn(output_shape, 1)
-        self.activation = activation
-
-    def set_weights(self, weights, bias):
-        print(weights.shape, bias.shape, self.weights.shape, self.bias.shape)
-        if weights.shape != self.weights.shape:
-            raise ValueError("Uncompatiable shape of weights.")
-        self.weights = weights
-        self.bias = bias
-
-    def forward(self, input_data):
-        self.input_data = input_data
-        z = np.dot(self.weights, self.input_data) + self.bias
-        self.z = z
-        return self.activation(z)
-
-    def backward(self, output_gradient, alpha):
-        activation_gradient = (self.activation(self.z) * (1 - self.activation(self.z)))
-        weights_gradient = np.dot(output_gradient * activation_gradient, self.input_data.T)
-        self.bias -= alpha * output_gradient * activation_gradient
-        output_gradient = np.dot(self.weights.T, output_gradient * activation_gradient)
-        self.weights -= alpha * weights_gradient
-        return output_gradient
+from utils import load_data, sigmoid, softmax, binary_cross_entropy_loss, binary_cross_entropy_derivative, convert_to_binary_pred
+from DenseLayer import DenseLayer, Layer
 
 class NeuralNet():
     def __init__(self):
@@ -77,7 +21,8 @@ class NeuralNet():
                 if layer_data['type'] == 'DenseLayer':
                     network.append(DenseLayer(layer_data['input_shape'],
                                             layer_data['output_shape'], 
-                                            activation=layer_data['activation_function']))
+                                            activation=layer_data['activation'],
+                                            weights_initializer=layer_data['weights_initializer']))
             self.network = network
         else:
             raise TypeError("Invalid form of input to create a neural network.")
@@ -97,14 +42,15 @@ class NeuralNet():
         weights_and_biases = []
         for layer in self.network:
             if isinstance(layer, DenseLayer):
-                weights_and_biases.append((layer.weights, layer.bias))
+                weights_and_biases.append(layer.weights)
+                weights_and_biases.append(layer.bias)
         return weights_and_biases
 
     def set_weights(self, initial_weights):
         if not isinstance(initial_weights, list):
             raise TypeError("Invalid type of initial_weights, a list of weights required.")
         if not len(initial_weights) == 2 * len(self.network):
-            print(len(initial_weights), len(self.network))
+            #print(len(initial_weights), len(self.network))
             raise ValueError("Invalid input of list: not enought values to set weights and biases.")
 
         for index, layer in zip(range(0, len(initial_weights), 2), self.network):
@@ -121,7 +67,8 @@ class NeuralNet():
                     'shape': layer.shape,
                     'input_shape': layer.shape[0],
                     'output_shape': layer.shape[1],
-                    'activation_function': f'{layer.activation.__name__}',
+                    'activation': f'{layer.activation.__name__}',
+                    'weights_initializer': f'{layer.weights_initializer}',
                     #'weights': layer.weights.tolist(),
                     #'bias': layer.bias.tolist(),
                 }
@@ -148,6 +95,8 @@ class NeuralNet():
 
 
     def fit(self, network, data_train, data_valid, loss, learning_rate, batch_size, epochs):
+        if loss == 'binary_cross_entropy_loss':
+            loss = binary_cross_entropy_loss
         patience=5
         lr_decay_factor=0.1
         lr_decay_patience=3
@@ -176,10 +125,12 @@ class NeuralNet():
             total_loss = 0
             for index, (x_i, y_i) in enumerate(zip(x_train, y_train)):
                 y_pred = (self.forward(x_i.reshape(1, -1))).reshape(1, -1)
+                #print('y_pred:', y_pred, 'x_i:', x_i, 'y_i:', y_i)
                 binary_pred = convert_to_binary_pred(y_pred) 
                 binary_predictions[index] = binary_pred
-                grad = nll_grad(y_pred, y_i).reshape(-1, 1)#.reshape(1, -1))
-                total_loss = loss_(y_i, y_pred)
+                #grad = nll_grad(y_pred, y_i).reshape(-1, 1)#.reshape(1, -1))
+                grad = binary_cross_entropy_derivative(y_i, y_pred).reshape(-1, 1)
+                total_loss = loss(y_i, y_pred)
                 self.backward(grad, alpha)
     
             accuracy = accuracy_score(y_train, binary_predictions)
@@ -191,8 +142,8 @@ class NeuralNet():
             val_loss = 0
             val_binary_predictions = np.zeros_like(y_val)
             for index, (x_val_i, y_val_i) in enumerate(zip(x_val, y_val)):
-                y_val_pred = (self.forward(x_val_i.reshape(1, -1)))
-                val_loss = loss_(y_val_i, y_val_pred)
+                y_val_pred = (self.forward(x_val_i.reshape(1, -1))).reshape(1, -1)
+                val_loss = loss(y_val_i, y_val_pred)
                 val_binary_pred = convert_to_binary_pred(y_val_pred) 
                 val_binary_predictions[index] = val_binary_pred
     
@@ -224,6 +175,7 @@ class NeuralNet():
                 print(f"Early stopping at epoch {epoch}.")
                 break
     
+        print('Accuray:', accuracy, val_accuracy)
         plot_(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
         return epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list
 
@@ -231,150 +183,50 @@ class NeuralNet():
         alpha = 0.5
         x_test = data_test[:, :-2]
         y_test = data_test[:, -2:]
+
+        binary_predictions = np.zeros_like(y_test)
         for index, (x_i, y_i) in enumerate(zip(x_test, y_test)):
             y_pred = (self.forward(x_i.reshape(1, -1))).reshape(1, -1)
-            print('y_pred:', y_pred)
-            error = ((y_pred - y_i) ** 2 / 2).reshape(-1, 1)#.reshape(1, -1))
-            print('Error:', error)
-            grad = (y_pred - y_i).reshape(-1, 1)#.reshape(1, -1))
-            print('grad:', grad)
-            self.backward(grad, alpha)
+            #print('y_pred:', y_pred)
+            #error = ((y_pred - y_i) ** 2 / 2).reshape(-1, 1)#.reshape(1, -1))
+            #error = binary_cross_entropy_loss(y_i, y_pred)
+            #print('Error:', error)
+            #grad = (y_pred - y_i).reshape(-1, 1)#.reshape(1, -1))
+            grad = binary_cross_entropy_derivative(y_i, y_pred).reshape(-1, 1)
+            #print('grad:', grad)
+            #self.backward(grad, alpha)
 
-def loss_(y, y_hat, eps=1e-15):
-    y_hat = np.clip(y_hat, eps, 1 - eps)
-    loss = -np.mean(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
-    return float(loss)
-
-def convert_to_binary_pred(y_pred, threshold=0.5):
-    max_index = np.argmax(y_pred)
+            binary_pred = convert_to_binary_pred(y_pred) 
+            binary_predictions[index] = binary_pred
     
-    binary_pred = np.zeros((1, 2))
-    binary_pred[0][max_index] = 1
-
-    return binary_pred
-
-def save(model):
-    # Save model configuration as a JSON file
-    model_config = model.to_json()
-    with open('./saved_model_config.json', 'w') as json_file:
-        json.dump(model_config, json_file)
-        print("> Saving model configuration to './saved_model_config.json'")
-    
-    # Save model weights as a .npy file
-    model_weights = model.get_weights()
-    np.save('./saved_model_weights.npy', model_weights)
-    print("> Saving model weights to './saved_model_weights.npy'")
-
-def load_data(filename):
-    data = pd.read_csv(filename, header=None)
-    data[1] = data[1].map({"M": 1, "B": 0})
-    y = data[1].values
-    x = data.drop([0, 1], axis=1).values
-    # Normalize the data
-    scaler = StandardScaler()
-    x = scaler.fit_transform(x)
-    y = one_hot_encode_binary_labels(y)
-    return train_test_split(x, y, test_size=0.2, random_state=42, stratify=y)
-
-def load_data1(filename):
-    data = pd.read_csv(filename, header=None)
-    data[1] = data[1].map({"M": 1, "B": 0})
-    y = data[1].values
-    x = data.drop([0, 1], axis=1).values
-
-    # Normalize the data
-    scaler = StandardScaler()
-    x = scaler.fit_transform(x)
-
-    return x, y 
-
-def one_hot_encode_binary_labels(labels):
-    one_hot_encoded_labels = np.zeros((len(labels), 2))
-    print(one_hot_encoded_labels.shape)
-    for i, label in enumerate(labels):
-        one_hot_encoded_labels[i, int(label)] = 1
-
-    return one_hot_encoded_labels
+        accuracy = accuracy_score(y_test, binary_predictions)
+        #print(binary_predictions)
+        print('Accuray:', accuracy)
+        return binary_predictions
 
 
-#def plot_(x, y ,net):
-def plot_(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list):
-    #epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = train(x, y, net)
-    # Plot training and validation accuracy and loss
-    fig, axes = plt.subplots(1, 2, figsize=(15, 5))
-    for i in range(2):
-        ax = axes[i]
-        if (i == 0):
-            ax.plot(epoch_list, loss_list, label='training loss')
-            ax.plot(epoch_list, val_loss_list, label='validation loss')
-            ax.set_xlabel('Epoch')
-            ax.set_ylabel('Loss')
-            ax.legend()
-        else:
-            ax.plot(epoch_list, accuracy_list, label='training accuracy')
-            ax.plot(epoch_list, val_accuracy_list, label='validation accuracy')
-            ax.set_xlabel('Epoch')
-            ax.set_ylabel('Accuracy')
-            ax.legend()
-
-    plt.show()
-
-def plot_compare(x, y ,net, net1):
-    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = train(x, y, net)
-    # Plot training and validation accuracy and loss
-    fig, axes = plt.subplots(2, 2, figsize=(20, 15))
-    for i in range(2):
-        ax = axes[0][i]
-        if (i == 0):
-            ax.plot(epoch_list, loss_list, label='training loss')
-            ax.plot(epoch_list, val_loss_list, label='validation loss')
-            ax.set_xlabel('Epoch')
-            ax.set_ylabel('Loss')
-            ax.legend()
-        else:
-            ax.plot(epoch_list, accuracy_list, label='training accuracy')
-            ax.plot(epoch_list, val_accuracy_list, label='validation accuracy')
-            ax.set_xlabel('Epoch')
-            ax.set_ylabel('Accuracy')
-            ax.legend()
-    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = train(x, y, net1)
-    for i in range(2):
-        ax = axes[1][i]
-        if (i == 0):
-            ax.plot(epoch_list, loss_list, label='training loss')
-            ax.plot(epoch_list, val_loss_list, label='validation loss')
-            ax.set_xlabel('Epoch')
-            ax.set_ylabel('Loss')
-            ax.legend()
-        else:
-            ax.plot(epoch_list, accuracy_list, label='training accuracy')
-            ax.plot(epoch_list, val_accuracy_list, label='validation accuracy')
-            ax.set_xlabel('Epoch')
-            ax.set_ylabel('Accuracy')
-            ax.legend()
-
-    plt.show()
-
-def prediction():
+def prediction(data_test):
     weights_path = 'saved_model_weights.npy'
     config_path = 'saved_model_config.json'
+    data_path = 'data.csv'
 
     weights = np.load(weights_path, allow_pickle=True)
     with open(config_path, 'r') as file:
         json_config = json.load(file)
     config = json.loads(json_config)
 
-    #print(weights)
+    #print(weights, weights.shape, weights[0].shape, type(weights))
+    #print(list(weights), type(list(weights)))
     #print(config, type(config))
     #print(config['network_topology'])
     #for key, value in config.items():
     #    print(f"{key}: {value}")
 
-    print(config['network_topology'])
+    #print(config['network_topology'])
     model = NeuralNet()
     model.create_network(config['network_topology'])
-    data_train = np.hstack((x_train, y_train))
-    data_valid = np.hstack((x_val, y_val))
+    model.set_weights(list(weights))
+    model.predict(data_test)
 
 def backprop_test():
     np.random.seed(0)
@@ -419,7 +271,7 @@ def main_test():
     # Load and split the data
     #x_train, x_test, y_train, y_test = load_data('data.csv')
     x_train, x_val, y_train, y_val= load_data('data.csv')
-    print(x_train.shape, x_val.shape, y_train.shape, y_val.shape)
+    #print(x_train.shape, x_val.shape, y_train.shape, y_val.shape)
 
     # Combine x_train and y_train as data_train
     data_train = np.hstack((x_train, y_train))
@@ -428,16 +280,18 @@ def main_test():
 
     model = NeuralNet()
     network = model.create_network([
-        DenseLayer(30, 20, activation=sigmoid),
-        DenseLayer(20, 10, activation=sigmoid, weights_initializer='heUniform'),
-        DenseLayer(10, 2, activation=sigmoid, weights_initializer='heUniform'),
-        DenseLayer(2, 2, activation=softmax, weights_initializer='heUniform')
+        DenseLayer(30, 20, activation='sigmoid'),
+        DenseLayer(20, 10, activation='sigmoid', weights_initializer='random'),
+        DenseLayer(10, 2, activation='sigmoid', weights_initializer='random'),
+        DenseLayer(2, 2, activation='softmax', weights_initializer='random')
         ])
 
-    model.fit(network, data_train, data_valid, loss=loss_, learning_rate=1e-3, batch_size=8, epochs=70)
-    save(model)
-    prediction()
+    #model.fit(network, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=8, epochs=100)
+    #save(model)
+    prediction(data_valid)
+    #model.predict(data_valid)
 
 if __name__ == "__main__":
     np.random.seed(0)
-    backprop_test()
+    #backprop_test()
+    main_test()
