@@ -1,5 +1,5 @@
 import numpy as np
-from utils import sigmoid, softmax
+from utils import sigmoid, softmax, heUniform
 
 class Layer:
     def __init__(self):
