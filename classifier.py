@@ -9,7 +9,6 @@ from sklearn.preprocessing import StandardScaler
 # Helper functions
 nll_grad = lambda y_pred, y_true: y_pred - y_true
 
-
 def sigmoid(x):
     return 1 / (1 + np.exp(np.clip(-x, -709, 709)))
 
@@ -47,17 +46,19 @@ class DenseLayer(Layer):
         self.weights = weights
         self.bias = bias
 
-    def forward(self, x):
-        self.x = x
-        z = np.dot(self.weights, self.x) + self.bias
+    def forward(self, input_data):
+        self.input_data = input_data
+        z = np.dot(self.weights, self.input_data) + self.bias
+        self.z = z
         return self.activation(z)
 
     def backward(self, output_gradient, alpha):
-        activation_gradient = np.mean(self.activation(self.x) * (1 - self.activation(self.x)))
-        weights_gradient = np.dot(output_gradient * activation_gradient, self.x.T)
-        self.weights -= alpha * weights_gradient
+        activation_gradient = (self.activation(self.z) * (1 - self.activation(self.z)))
+        weights_gradient = np.dot(output_gradient * activation_gradient, self.input_data.T)
         self.bias -= alpha * output_gradient * activation_gradient
-        return np.dot(self.weights.T, output_gradient)
+        output_gradient = np.dot(self.weights.T, output_gradient * activation_gradient)
+        self.weights -= alpha * weights_gradient
+        return output_gradient
 
 class classificationNet():
     def __init__(self, output_shape=1):
@@ -226,8 +227,10 @@ class classificationNet():
         for index, (x_i, y_i) in enumerate(zip(x_test, y_test)):
             y_pred = (self.forward(x_i.reshape(1, -1))).reshape(1, -1)
             print('y_pred:', y_pred)
-            grad = ((y_pred - y_i) ** 2 / 2).reshape(-1, 1)#.reshape(1, -1))
-            print('Error:', grad)
+            error = ((y_pred - y_i) ** 2 / 2).reshape(-1, 1)#.reshape(1, -1))
+            print('Error:', error)
+            grad = (y_pred - y_i).reshape(-1, 1)#.reshape(1, -1))
+            print('grad:', grad)
             self.backward(grad, alpha)
 
 def loss_(y, y_hat, eps=1e-15):
@@ -368,3 +371,4 @@ if __name__ == "__main__":
 
     model.fit(network, data_train, data_valid, loss=loss_, learning_rate=1e-3, batch_size=8, epochs=70)
     #save(model)
+    #model.predict(data_train)
