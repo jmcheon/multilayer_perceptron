@@ -47,17 +47,19 @@ class DenseLayer(Layer):
         self.weights = weights
         self.bias = bias
 
-    def forward(self, x):
-        self.x = x
-        z = np.dot(self.weights, self.x) + self.bias
+    def forward(self, input_data):
+        self.input_data = input_data
+        z = np.dot(self.weights, self.input_data) + self.bias
+        self.z = z
         return self.activation(z)
 
     def backward(self, output_gradient, alpha):
-        activation_gradient = np.mean(self.activation(self.x) * (1 - self.activation(self.x)))
-        weights_gradient = np.dot(output_gradient * activation_gradient, self.x.T)
-        self.weights -= alpha * weights_gradient
+        activation_gradient = (self.activation(self.z) * (1 - self.activation(self.z)))
+        weights_gradient = np.dot(output_gradient * activation_gradient, self.input_data.T)
         self.bias -= alpha * output_gradient * activation_gradient
-        return np.dot(self.weights.T, output_gradient)
+        output_gradient = np.dot(self.weights.T, output_gradient * activation_gradient)
+        self.weights -= alpha * weights_gradient
+        return output_gradient
 
 class NeuralNet():
     def __init__(self):
@@ -232,14 +234,16 @@ class NeuralNet():
         for index, (x_i, y_i) in enumerate(zip(x_test, y_test)):
             y_pred = (self.forward(x_i.reshape(1, -1))).reshape(1, -1)
             print('y_pred:', y_pred)
-            grad = ((y_pred - y_i) ** 2 / 2).reshape(-1, 1)#.reshape(1, -1))
-            print('Error:', grad)
+            error = ((y_pred - y_i) ** 2 / 2).reshape(-1, 1)#.reshape(1, -1))
+            print('Error:', error)
+            grad = (y_pred - y_i).reshape(-1, 1)#.reshape(1, -1))
+            print('grad:', grad)
             self.backward(grad, alpha)
 
-    def loss_(y, y_hat, eps=1e-15):
-        y_hat = np.clip(y_hat, eps, 1 - eps)
-        loss = -np.mean(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
-        return float(loss)
+def loss_(y, y_hat, eps=1e-15):
+    y_hat = np.clip(y_hat, eps, 1 - eps)
+    loss = -np.mean(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
+    return float(loss)
 
 def convert_to_binary_pred(y_pred, threshold=0.5):
     max_index = np.argmax(y_pred)
@@ -369,11 +373,49 @@ def prediction():
     print(config['network_topology'])
     model = NeuralNet()
     model.create_network(config['network_topology'])
+    data_train = np.hstack((x_train, y_train))
+    data_valid = np.hstack((x_val, y_val))
 
-
-if __name__ == "__main__":
+def backprop_test():
     np.random.seed(0)
 
+    x_train = np.array([[0.1, 0.2]])
+    y_train = np.array([[0.4, 0.6]])
+    x_val = np.array([[0.1, 0.2]])
+    y_val = np.array([[0.4, 0.6]])
+
+    data_train = np.hstack((x_train, y_train))
+    data_valid = np.hstack((x_val, y_val))
+
+    model = NeuralNet()
+
+    network = model.create_network([
+        DenseLayer(2, 2, activation=sigmoid),
+        DenseLayer(2, 2, activation=sigmoid, weights_initializer='heUniform')
+        ])
+
+    initial_weights = [
+        np.array([[0.3, 0.25], [0.4, 0.35]], dtype=np.float32), 
+        np.zeros(2, dtype=np.float32),  # Biases
+        np.array([[0.45, 0.4], [0.7, 0.6]], dtype=np.float32),  # Weights 
+        np.zeros(2, dtype=np.float32),  # Biases
+    ]
+    model.set_weights(initial_weights)
+    #print(model.network[0].weights)
+    #print(model.network[0].bias)
+    #print(model.network[1].weights)
+    #print(model.network[1].bias)
+
+    #model.fit(network, data_train, data_valid, loss=loss_, learning_rate=0.5, batch_size=8, epochs=100)
+    model.predict(data_train)
+    print("Updated weights and biases.")
+    print(model.network[0].weights)
+    print(model.network[0].bias)
+    print(model.network[1].weights)
+    print(model.network[1].bias)
+
+def main_test():
+    np.random.seed(0)
     # Load and split the data
     #x_train, x_test, y_train, y_test = load_data('data.csv')
     x_train, x_val, y_train, y_val= load_data('data.csv')
@@ -384,7 +426,7 @@ if __name__ == "__main__":
     # Combine x_val and y_val as data_valid
     data_valid = np.hstack((x_val, y_val))
 
-    model = NeuralNet(output_shape=2)
+    model = NeuralNet()
     network = model.create_network([
         DenseLayer(30, 20, activation=sigmoid),
         DenseLayer(20, 10, activation=sigmoid, weights_initializer='heUniform'),
@@ -392,6 +434,10 @@ if __name__ == "__main__":
         DenseLayer(2, 2, activation=softmax, weights_initializer='heUniform')
         ])
 
-    #model.fit(network, data_train, data_valid, loss=loss_, learning_rate=1e-3, batch_size=8, epochs=70)
-    #save(model)
+    model.fit(network, data_train, data_valid, loss=loss_, learning_rate=1e-3, batch_size=8, epochs=70)
+    save(model)
     prediction()
+
+if __name__ == "__main__":
+    np.random.seed(0)
+    backprop_test()
