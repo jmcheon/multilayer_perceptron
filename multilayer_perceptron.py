@@ -126,8 +126,14 @@ def multiple_models_test():
         DenseLayer(30, 15, activation='sigmoid'),
         DenseLayer(15, 2, activation='softmax', weights_initializer='random')
         ])
-    model_list = [model1, model2, model3]
-    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=50)
+    #model_list = [model1, model2, model3]
+    model_list = [model3]
+    model3.fit(None, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=50)
+    #print(model3.params)
+    #print(model3.velocity)
+    #compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=50)
+    #print(model1.metrics_history)
+    #model3.print_metrics_history()
 
 if __name__ == "__main__":
     #backprop_test()

@@ -1,13 +1,18 @@
 import numpy as np
 import json
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
 from utils import binary_cross_entropy_loss, binary_cross_entropy_derivative, convert_to_binary_pred
 from utils import plot_ 
 from DenseLayer import DenseLayer, Layer
 
 class NeuralNet():
-    def __init__(self):
+    def __init__(self, momentum=0.9, nesterov=True):
         self.network = None
+        self.metrics_history = []
+        self.momentum = momentum
+        self.nesterov = nesterov
+        self.params = {}
+        self.velocity = {}
 
     def create_network(self, net):
         network = None
@@ -26,6 +31,15 @@ class NeuralNet():
             self.network = network
         else:
             raise TypeError("Invalid form of input to create a neural network.")
+        print("Setting neural network params...")
+        for layer_num, layer in enumerate(self.network):
+            if isinstance(layer, DenseLayer):
+                self.params[f'W{layer_num + 1}'] = layer.weights
+                self.params[f'b{layer_num + 1}'] = layer.weights
+
+        for param_name, param_value in self.params.items():
+            self.velocity[param_name] = np.zeros_like(param_value)
+
         return network
 
     def forward(self, input_data):
@@ -35,6 +49,7 @@ class NeuralNet():
         return input_data
 
     def backward(self, output_gradient, alpha):
+        grads = {}
         for layer in reversed(self.network):
             output_gradient = layer.backward(output_gradient, alpha)
 
@@ -93,6 +108,14 @@ class NeuralNet():
 
         return json_data
 
+    def print_metrics_history(self):
+        if len(self.metrics_history) == 0:
+            print("It hasn't trained yet.")
+            return
+        for metric in self.metrics_history:
+            print(f"epoch {metric['epoch']} - loss: {metric['loss']} - val_loss: {metric['val_loss']}")
+        #print(f'epoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f} - val_loss: {val_loss:.4f}')
+
     def create_mini_batches(self, x, y, batch_size):
         indices = np.arange(x.shape[0])
         np.random.shuffle(indices)
@@ -100,6 +123,27 @@ class NeuralNet():
         for start_idx in range(0, x.shape[0] - batch_size + 1, batch_size):
             batch_idx = indices[start_idx:start_idx + batch_size]
             yield x[batch_idx], y[batch_idx]
+
+    def evaluate_metrics(self, y, y_pred):
+        accuracy = accuracy_score(y, y_pred)
+        precision = precision_score(y, y_pred, average='weighted')
+        recall = recall_score(y, y_pred, average='weighted')
+        f1 = f1_score(y, y_pred, average='weighted')
+
+        return accuracy, precision, recall, f1
+
+    def update_parameters(self, grads, learning_rate):
+        for param_name in self.params:
+            if self.nesterov:  # Nesterov momentum update
+                # Calculate the "look-ahead" gradient
+                look_ahead_grad = self.params[param_name] - self.momentum * self.velocity[param_name]
+                # Update the velocity
+                self.velocity[param_name] = self.momentum * self.velocity[param_name] + learning_rate * grads[param_name]
+                # Update the parameters based on the "look-ahead" gradient
+                self.params[param_name] = look_ahead_grad - learning_rate * self.velocity[param_name]
+            else:  # Vanilla momentum update
+                self.velocity[param_name] = self.momentum * self.velocity[param_name] - learning_rate * grads[param_name]
+                self.params[param_name] += self.velocity[param_name]
 
 
     def fit(self, network, data_train, data_valid, loss, learning_rate, batch_size, epochs):
@@ -110,9 +154,17 @@ class NeuralNet():
         lr_decay_patience=3
      
         accuracy_list = []
+        precision_list = []
+        recall_list = []
+        f1_list = []
         loss_list = []
+
         val_accuracy_list = []
+        val_precision_list = []
+        val_recall_list = []
+        val_f1_list = []
         val_loss_list = []
+
         epoch_list = []
         best_loss = float('inf')
         counter = 0
@@ -151,6 +203,7 @@ class NeuralNet():
                     #total_loss = loss(y_i, y_pred)
                     batch_loss = loss(y_i, y_pred)
                     self.backward(grad, alpha)
+                    #self.update_parameters(grad, alpha)
 
                 total_loss += batch_loss
                 n_batches += 1
@@ -158,6 +211,7 @@ class NeuralNet():
             total_loss /= n_batches
     
             #print('y_train_batch:', y_train_batch.shape, 'binary_predictions:', binary_predictions.shape)
+            #metrics = classification_report(y_train_batch, binary_predictions)
             accuracy = accuracy_score(y_train_batch, binary_predictions)
             accuracy_list.append(accuracy)
             loss_list.append(total_loss)
@@ -185,14 +239,22 @@ class NeuralNet():
 
             val_loss /= n_val_batches
     
-            val_accuracy = accuracy_score(y_val_batch, val_binary_predictions)
+            #val_accuracy = accuracy_score(y_val_batch, val_binary_predictions)
+            val_accuracy, val_precision, val_recall, val_f1 = self.evaluate_metrics(y_val_batch, val_binary_predictions)
             val_accuracy_list.append(val_accuracy)
+            val_precision_list.append(val_precision)
+            val_recall_list.append(val_recall)
+            val_f1_list.append(val_f1)
             val_loss_list.append(val_loss)
 
 
 
             padding_width = len(str(epochs))
-            print(f'epoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f} - val_loss: {val_loss:.4f}')
+            print(f'epoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f} - val_loss: {val_loss:.4f}, ', end="")
+            print(f"Accuracy: {val_accuracy:.2f}%, Precision: {val_precision:.2f}%, Recall: {val_recall:.2f}%, F1 score: {val_f1:.2f}%")
+
+            self.metrics_history.append({"epoch": f'{epoch + 1:0{padding_width}d}/{epochs}', "loss": f'{total_loss:.4f}', "val_loss": f'{val_loss:.4f}'})
+
     
             # Check if validation loss is decreasing
             if val_loss < best_loss:
@@ -213,6 +275,7 @@ class NeuralNet():
                 print(f"Early stopping at epoch {epoch}.")
                 break
     
+
         print('Accuray:', accuracy, val_accuracy)
         #plot_(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
         return epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list
