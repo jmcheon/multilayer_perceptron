@@ -93,7 +93,7 @@ class NeuralNet():
 
         return json_data
 
-    def create_mini_batches(x, y, batch_size):
+    def create_mini_batches(self, x, y, batch_size):
         indices = np.arange(x.shape[0])
         np.random.shuffle(indices)
 
@@ -129,33 +129,63 @@ class NeuralNet():
         print('x_train shape :', x_train.shape)
         print('x_valid shape :', x_val.shape)
         for epoch in range(epochs):
-            binary_predictions = np.zeros_like(y_train)
             total_loss = 0
-            for index, (x_i, y_i) in enumerate(zip(x_train, y_train)):
-                y_pred = (self.forward(x_i.reshape(1, -1))).reshape(1, -1)
-                #print('y_pred:', y_pred, 'x_i:', x_i, 'y_i:', y_i)
-                binary_pred = convert_to_binary_pred(y_pred) 
-                binary_predictions[index] = binary_pred
-                #grad = nll_grad(y_pred, y_i).reshape(-1, 1)#.reshape(1, -1))
-                grad = binary_cross_entropy_derivative(y_i, y_pred).reshape(-1, 1)
-                total_loss = loss(y_i, y_pred)
-                self.backward(grad, alpha)
+            n_batches = 0
+
+            y_train_batch = np.empty((0, y_train.shape[1]))
+            #binary_predictions = np.zeros_like(y_train)
+            binary_predictions = np.empty((0, y_train.shape[1]))
+            for x_batch, y_batch in self.create_mini_batches(x_train, y_train, batch_size):
+                y_train_batch = np.vstack((y_train_batch, y_batch))
+                batch_loss = 0
+                for index, (x_i, y_i) in enumerate(zip(x_batch, y_batch)):
+                    y_pred = (self.forward(x_i.reshape(1, -1))).reshape(1, -1)
+                    #print('y_pred:', y_pred, 'x_i:', x_i, 'y_i:', y_i)
+                    binary_pred = convert_to_binary_pred(y_pred) 
+                    #print('binary_pred:', binary_pred, binary_pred.shape)
+                    binary_predictions = np.vstack((binary_predictions, binary_pred))
+                    #print('binary_predictions:', binary_predictions.shape)
+                    #binary_predictions[index] = binary_pred
+                    #grad = nll_grad(y_pred, y_i).reshape(-1, 1)#.reshape(1, -1))
+                    grad = binary_cross_entropy_derivative(y_i, y_pred).reshape(-1, 1)
+                    #total_loss = loss(y_i, y_pred)
+                    batch_loss = loss(y_i, y_pred)
+                    self.backward(grad, alpha)
+
+                total_loss += batch_loss
+                n_batches += 1
+
+            total_loss /= n_batches
     
-            accuracy = accuracy_score(y_train, binary_predictions)
+            #print('y_train_batch:', y_train_batch.shape, 'binary_predictions:', binary_predictions.shape)
+            accuracy = accuracy_score(y_train_batch, binary_predictions)
             accuracy_list.append(accuracy)
             loss_list.append(total_loss)
             epoch_list.append(epoch)
     
             # Calculate validation loss and accuracy
             val_loss = 0
-            val_binary_predictions = np.zeros_like(y_val)
-            for index, (x_val_i, y_val_i) in enumerate(zip(x_val, y_val)):
-                y_val_pred = (self.forward(x_val_i.reshape(1, -1))).reshape(1, -1)
-                val_loss = loss(y_val_i, y_val_pred)
-                val_binary_pred = convert_to_binary_pred(y_val_pred) 
-                val_binary_predictions[index] = val_binary_pred
+            n_val_batches = 0
+
+            y_val_batch = np.empty((0, y_val.shape[1]))
+            #val_binary_predictions = np.zeros_like(y_val)
+            val_binary_predictions = np.empty((0, y_val.shape[1]))
+            for x_batch, y_batch in self.create_mini_batches(x_val, y_val, batch_size):
+                y_val_batch = np.vstack((y_val_batch, y_batch))
+                val_batch_loss = 0
+                for index, (x_val_i, y_val_i) in enumerate(zip(x_batch, y_batch)):
+                    y_val_pred = (self.forward(x_val_i.reshape(1, -1))).reshape(1, -1)
+                    val_batch_loss = loss(y_val_i, y_val_pred)
+                    val_binary_pred = convert_to_binary_pred(y_val_pred) 
+                    #val_binary_predictions[index] = val_binary_pred
+                    val_binary_predictions = np.vstack((val_binary_predictions, val_binary_pred))
+
+                val_loss += val_batch_loss
+                n_val_batches += 1
+
+            val_loss /= n_val_batches
     
-            val_accuracy = accuracy_score(y_val, val_binary_predictions)
+            val_accuracy = accuracy_score(y_val_batch, val_binary_predictions)
             val_accuracy_list.append(val_accuracy)
             val_loss_list.append(val_loss)
 

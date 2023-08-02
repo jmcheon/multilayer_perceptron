@@ -88,7 +88,7 @@ def main_test():
 
     #print((model.get_weights()))
     #print(np.mean(model.get_weights()))
-    model.fit(network, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=8, epochs=70)
+    model.fit(network, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=70)
     #save(model)
     #prediction(data_valid)
     model.predict(data_valid)
