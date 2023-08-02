@@ -8,24 +8,33 @@ from sklearn.preprocessing import StandardScaler
 
 # Helper functions
 def mse(y, y_pred):
-    return np.mean(np.power(y_true - y_pred, 2)) / 2
+    return np.mean(np.power(y - y_pred, 2)) / 2
 
 def mse_derivative(y, y_pred):
-    return (y_true - y_pred) / np.size(y_true)
+    return (y - y_pred) / np.size(y)
 
 def binary_cross_entropy_loss(y, y_pred, eps=1e-15):
     y_pred = np.clip(y_pred, eps, 1 - eps)
     loss = -np.mean(y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))
     return float(loss)
 
-def binary_cross_entropy_derivative(y, y_pred):
+def binary_cross_entropy_derivative(y, y_pred, eps=1e-15):
+    y_pred = np.clip(y_pred, eps, 1 - eps)
     return -(y / y_pred - (1 - y) / (1 - y_pred))
 
 def convert_to_binary_pred(y_pred, threshold=0.5):
-    max_index = np.argmax(y_pred)
+    binary_pred = (y_pred > threshold).astype(int)
+    return binary_pred
+    binary_pred = np.zeros_like(y_pred)
+    #print(y_pred[:5])
+    #print('y_pred:', y_pred.shape)
+    #print('binary_pred:', binary_pred.shape)
+    for i, y_i in enumerate(y_pred):
+        max_index = np.argmax(y_i)
+        #print(i, y_i, max_index)
     
-    binary_pred = np.zeros((1, 2))
-    binary_pred[0][max_index] = 1
+        #binary_pred = np.zeros((1, 2))
+        binary_pred[i][max_index] = 1
 
     return binary_pred
 

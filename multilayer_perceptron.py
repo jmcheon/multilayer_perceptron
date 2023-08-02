@@ -86,10 +86,12 @@ def main_test():
         DenseLayer(2, 2, activation='softmax', weights_initializer='random')
         ])
 
-    #model.fit(network, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=8, epochs=100)
+    #print((model.get_weights()))
+    #print(np.mean(model.get_weights()))
+    model.fit(network, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=8, epochs=70)
     #save(model)
-    prediction(data_valid)
-    #model.predict(data_valid)
+    #prediction(data_valid)
+    model.predict(data_valid)
 
 if __name__ == "__main__":
     #backprop_test()

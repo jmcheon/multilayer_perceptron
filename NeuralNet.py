@@ -2,6 +2,7 @@ import numpy as np
 import json
 from sklearn.metrics import accuracy_score
 from utils import binary_cross_entropy_loss, binary_cross_entropy_derivative, convert_to_binary_pred
+from utils import plot_ 
 from DenseLayer import DenseLayer, Layer
 
 class NeuralNet():
@@ -92,6 +93,14 @@ class NeuralNet():
 
         return json_data
 
+    def create_mini_batches(x, y, batch_size):
+        indices = np.arange(x.shape[0])
+        np.random.shuffle(indices)
+
+        for start_idx in range(0, x.shape[0] - batch_size + 1, batch_size):
+            batch_idx = indices[start_idx:start_idx + batch_size]
+            yield x[batch_idx], y[batch_idx]
+
 
     def fit(self, network, data_train, data_valid, loss, learning_rate, batch_size, epochs):
         if loss == 'binary_cross_entropy_loss':
@@ -164,8 +173,8 @@ class NeuralNet():
     
             # Learning rate decay
             if counter >= lr_decay_patience:
-                alpha *= lr_decay_factor
-                print(f"Learning rate decayed to {alpha}.")
+                #alpha *= lr_decay_factor
+                #print(f"Learning rate decayed to {alpha}.")
                 counter = 0
                 pass
     
