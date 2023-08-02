@@ -1,7 +1,7 @@
 import numpy as np
 import json
 from sklearn.metrics import accuracy_score
-from utils import load_data, compare_models
+from utils import load_data, compare_models, plot_
 from DenseLayer import DenseLayer
 from NeuralNet import NeuralNet
 
@@ -127,15 +127,71 @@ def multiple_models_test():
         DenseLayer(15, 2, activation='softmax', weights_initializer='random')
         ])
     #model_list = [model1, model2, model3]
+    #print('velocity:', model3.velocity)
     model_list = [model3]
-    model3.fit(None, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=50)
+    #model3.fit(None, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=50)
     #print(model3.params)
-    #print(model3.velocity)
-    #compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=50)
+    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=50)
     #print(model1.metrics_history)
     #model3.print_metrics_history()
+
+def nesterov_optimizer_test():
+    np.random.seed(0)
+
+    x_train, x_val, y_train, y_val= load_data('data.csv')
+
+    data_train = np.hstack((x_train, y_train))
+    data_valid = np.hstack((x_val, y_val))
+
+    model1 = NeuralNet(nesterov=False)
+    model1.create_network([
+        DenseLayer(30, 20, activation='sigmoid'),
+        DenseLayer(20, 15, activation='sigmoid'),
+        DenseLayer(15, 2, activation='softmax', weights_initializer='zero')
+        ])
+
+    model2 = NeuralNet(nesterov=True)
+    model2.create_network([
+        DenseLayer(30, 20, activation='sigmoid'),
+        DenseLayer(20, 15, activation='sigmoid'),
+        DenseLayer(15, 2, activation='softmax', weights_initializer='zero')
+        ])
+
+    model_list = [model1, model2]
+    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=6e-2, batch_size='batch', epochs=50)
+
+def same_model_test():
+    np.random.seed(0)
+
+    x_train, x_val, y_train, y_val= load_data('data.csv')
+
+    data_train = np.hstack((x_train, y_train))
+    data_valid = np.hstack((x_val, y_val))
+
+    model1 = NeuralNet()
+    model1.create_network([
+        DenseLayer(30, 15, activation='sigmoid'),
+        DenseLayer(15, 2, activation='softmax', weights_initializer='zero')
+        ])
+
+    model2 = NeuralNet()
+    model2.create_network([
+        DenseLayer(30, 15, activation='sigmoid'),
+        DenseLayer(15, 2, activation='softmax', weights_initializer='zero')
+        ])
+
+    model3 = NeuralNet()
+    model3.create_network([
+        DenseLayer(30, 15, activation='sigmoid'),
+        DenseLayer(15, 2, activation='softmax', weights_initializer='zero')
+        ])
+
+    model_list = [model1, model2, model3]
+    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size='batch', epochs=50)
 
 if __name__ == "__main__":
     #backprop_test()
     #main_test()
-    multiple_models_test()
+    #multiple_models_test()
+    nesterov_optimizer_test()
+    #same_model_test()

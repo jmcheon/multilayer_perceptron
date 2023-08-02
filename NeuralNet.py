@@ -35,7 +35,7 @@ class NeuralNet():
         for layer_num, layer in enumerate(self.network):
             if isinstance(layer, DenseLayer):
                 self.params[f'W{layer_num + 1}'] = layer.weights
-                self.params[f'b{layer_num + 1}'] = layer.weights
+                self.params[f'b{layer_num + 1}'] = layer.bias
 
         for param_name, param_value in self.params.items():
             self.velocity[param_name] = np.zeros_like(param_value)
@@ -50,8 +50,22 @@ class NeuralNet():
 
     def backward(self, output_gradient, alpha):
         grads = {}
-        for layer in reversed(self.network):
-            output_gradient = layer.backward(output_gradient, alpha)
+        total_layers = len(self.network)
+        for index, layer in enumerate(reversed(self.network)):
+            layer_num = total_layers - index - 1
+            #print('layer_num:', layer_num)
+            output_gradient, weights_gradient, bias_gradient = layer.backward(output_gradient, alpha)
+
+            layer_grads = {
+                f'W{layer_num + 1}': weights_gradient,
+                f'b{layer_num + 1}': bias_gradient
+            }
+            for param_name, grad in layer_grads.items():
+                grads[param_name] = grad
+                #print(f'grads[{param_name}]:', (grads[param_name]).shape)
+
+        # Return the aggregated gradients
+        return grads
 
     def get_weights(self):
         weights_and_biases = []
@@ -76,7 +90,6 @@ class NeuralNet():
         layers = []
         for layer in self.network:
             if isinstance(layer, DenseLayer):
-                #layer_str = f"DenseLayer({layer.shape}, activation={layer.activation.__name__})"
                 layer_data = {
                     'type': 'DenseLayer',
                     'shape': layer.shape,
@@ -84,13 +97,8 @@ class NeuralNet():
                     'output_shape': layer.shape[1],
                     'activation': f'{layer.activation.__name__}',
                     'weights_initializer': f'{layer.weights_initializer}',
-                    #'weights': layer.weights.tolist(),
-                    #'bias': layer.bias.tolist(),
                 }
                 layers.append(layer_data)
-            else:
-                # for later layer types
-                continue
         return layers 
 
     def to_json(self, file_path=None):
@@ -117,16 +125,19 @@ class NeuralNet():
         #print(f'epoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f} - val_loss: {val_loss:.4f}')
 
     def create_mini_batches(self, x, y, batch_size):
-        indices = np.arange(x.shape[0])
-        np.random.shuffle(indices)
+        if isinstance(batch_size, str) and batch_size == 'batch':
+            yield x, y
+        else:
+            indices = np.arange(x.shape[0])
+            np.random.shuffle(indices)
 
-        for start_idx in range(0, x.shape[0] - batch_size + 1, batch_size):
-            batch_idx = indices[start_idx:start_idx + batch_size]
-            yield x[batch_idx], y[batch_idx]
+            for start_idx in range(0, x.shape[0] - batch_size + 1, batch_size):
+                batch_idx = indices[start_idx:start_idx + batch_size]
+                yield x[batch_idx], y[batch_idx]
 
     def evaluate_metrics(self, y, y_pred):
         accuracy = accuracy_score(y, y_pred)
-        precision = precision_score(y, y_pred, average='weighted')
+        precision = precision_score(y, y_pred, average='weighted', zero_division=0)
         recall = recall_score(y, y_pred, average='weighted')
         f1 = f1_score(y, y_pred, average='weighted')
 
@@ -134,14 +145,21 @@ class NeuralNet():
 
     def update_parameters(self, grads, learning_rate):
         for param_name in self.params:
-            if self.nesterov:  # Nesterov momentum update
+            # Nesterov momentum update
+            if self.nesterov:  
                 # Calculate the "look-ahead" gradient
                 look_ahead_grad = self.params[param_name] - self.momentum * self.velocity[param_name]
+                #print('look_ahead_grad:', look_ahead_grad.shape)
+                #print(f'self.velocity[{param_name}]:', self.velocity[param_name].shape)
+                #print(f'self.momentum * self.velocity[{param_name}]:', (self.momentum * self.velocity[param_name]).shape)
+                #print(f'grads[{param_name}]:', (grads[param_name]).shape)
+                #print(f'lr * grads[{param_name}]:', (learning_rate * grads[param_name]).shape)
                 # Update the velocity
                 self.velocity[param_name] = self.momentum * self.velocity[param_name] + learning_rate * grads[param_name]
                 # Update the parameters based on the "look-ahead" gradient
                 self.params[param_name] = look_ahead_grad - learning_rate * self.velocity[param_name]
-            else:  # Vanilla momentum update
+            # Vanilla momentum update
+            else:  
                 self.velocity[param_name] = self.momentum * self.velocity[param_name] - learning_rate * grads[param_name]
                 self.params[param_name] += self.velocity[param_name]
 
@@ -188,6 +206,7 @@ class NeuralNet():
             #binary_predictions = np.zeros_like(y_train)
             binary_predictions = np.empty((0, y_train.shape[1]))
             for x_batch, y_batch in self.create_mini_batches(x_train, y_train, batch_size):
+                print(x_batch.shape)
                 y_train_batch = np.vstack((y_train_batch, y_batch))
                 batch_loss = 0
                 for index, (x_i, y_i) in enumerate(zip(x_batch, y_batch)):
@@ -202,8 +221,8 @@ class NeuralNet():
                     grad = binary_cross_entropy_derivative(y_i, y_pred).reshape(-1, 1)
                     #total_loss = loss(y_i, y_pred)
                     batch_loss = loss(y_i, y_pred)
-                    self.backward(grad, alpha)
-                    #self.update_parameters(grad, alpha)
+                    grads = self.backward(grad, alpha)
+                    self.update_parameters(grads, alpha)
 
                 total_loss += batch_loss
                 n_batches += 1
@@ -261,7 +280,8 @@ class NeuralNet():
                 best_loss = val_loss
                 counter = 0
             else:
-                counter += 1
+                pass
+                #counter += 1
     
             # Learning rate decay
             if counter >= lr_decay_patience:

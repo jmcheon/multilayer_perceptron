@@ -94,10 +94,8 @@ def one_hot_encode_binary_labels(labels):
     return one_hot_encoded_labels
 
 
-#def plot_(x, y ,net):
 def plot_(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list):
     #epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = train(x, y, net)
-    # Plot training and validation accuracy and loss
     fig, axes = plt.subplots(1, 2, figsize=(15, 5))
     for i in range(2):
         ax = axes[i]
@@ -106,12 +104,14 @@ def plot_(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list
             ax.plot(epoch_list, val_loss_list, label='validation loss')
             ax.set_xlabel('Epoch')
             ax.set_ylabel('Loss')
+            ax.set_title(f'Learning Curves for loss')
             ax.legend()
         else:
             ax.plot(epoch_list, accuracy_list, label='training accuracy')
             ax.plot(epoch_list, val_accuracy_list, label='validation accuracy')
             ax.set_xlabel('Epoch')
             ax.set_ylabel('Accuracy')
+            ax.set_title(f'Learning Curves for accuracy')
             ax.legend()
 
     plt.show()
