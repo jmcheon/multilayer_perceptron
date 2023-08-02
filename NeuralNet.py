@@ -214,7 +214,7 @@ class NeuralNet():
                 break
     
         print('Accuray:', accuracy, val_accuracy)
-        plot_(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
+        #plot_(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
         return epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list
 
     def predict(self, data_test):

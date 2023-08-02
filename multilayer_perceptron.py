@@ -1,7 +1,7 @@
 import numpy as np
 import json
 from sklearn.metrics import accuracy_score
-from utils import load_data
+from utils import load_data, compare_models
 from DenseLayer import DenseLayer
 from NeuralNet import NeuralNet
 
@@ -88,11 +88,48 @@ def main_test():
 
     #print((model.get_weights()))
     #print(np.mean(model.get_weights()))
-    model.fit(network, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=70)
+    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(None, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=70)
+    plot_(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
     #save(model)
     #prediction(data_valid)
     model.predict(data_valid)
 
+def multiple_models_test():
+    np.random.seed(0)
+    # Load and split the data
+    #x_train, x_test, y_train, y_test = load_data('data.csv')
+    x_train, x_val, y_train, y_val= load_data('data.csv')
+    #print(x_train.shape, x_val.shape, y_train.shape, y_val.shape)
+
+    # Combine x_train and y_train as data_train
+    data_train = np.hstack((x_train, y_train))
+    # Combine x_val and y_val as data_valid
+    data_valid = np.hstack((x_val, y_val))
+
+    model1 = NeuralNet()
+    model1.create_network([
+        DenseLayer(30, 20, activation='sigmoid'),
+        DenseLayer(20, 10, activation='sigmoid', weights_initializer='random'),
+        DenseLayer(10, 2, activation='sigmoid', weights_initializer='random'),
+        DenseLayer(2, 2, activation='softmax', weights_initializer='random')
+        ])
+
+    model2 = NeuralNet()
+    model2.create_network([
+        DenseLayer(30, 15, activation='sigmoid'),
+        DenseLayer(15, 8, activation='sigmoid', weights_initializer='random'),
+        DenseLayer(8, 2, activation='softmax', weights_initializer='random')
+        ])
+
+    model3 = NeuralNet()
+    model3.create_network([
+        DenseLayer(30, 15, activation='sigmoid'),
+        DenseLayer(15, 2, activation='softmax', weights_initializer='random')
+        ])
+    model_list = [model1, model2, model3]
+    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=50)
+
 if __name__ == "__main__":
     #backprop_test()
-    main_test()
+    #main_test()
+    multiple_models_test()
