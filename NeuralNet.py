@@ -2,7 +2,6 @@ import numpy as np
 import json
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
 from utils import binary_cross_entropy_loss, binary_cross_entropy_derivative, convert_to_binary_pred
-from utils import plot_ 
 from DenseLayer import DenseLayer, Layer
 
 class NeuralNet():
@@ -71,7 +70,6 @@ class NeuralNet():
             }
             for param_name, grad in layer_grads.items():
                 grads[param_name] = grad
-                #print(f'grads[{param_name}]:', (grads[param_name]).shape)
 
         # Return the aggregated gradients
         return grads
@@ -214,7 +212,6 @@ class NeuralNet():
             #binary_predictions = np.zeros_like(y_train)
             binary_predictions = np.empty((0, y_train.shape[1]))
             for x_batch, y_batch in self.create_mini_batches(x_train, y_train, batch_size):
-                print(x_batch.shape)
                 y_train_batch = np.vstack((y_train_batch, y_batch))
                 batch_loss = 0
                 for index, (x_i, y_i) in enumerate(zip(x_batch, y_batch)):
@@ -304,8 +301,7 @@ class NeuralNet():
                 break
     
 
-        print('Accuray:', accuracy, val_accuracy)
-        #plot_(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
+        print('Train accuracy:', accuracy, 'Validation accuracy:', val_accuracy)
         return epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list
 
     def predict(self, data_test):
@@ -317,18 +313,15 @@ class NeuralNet():
         for index, (x_i, y_i) in enumerate(zip(x_test, y_test)):
             y_pred = (self.forward(x_i.reshape(1, -1))).reshape(1, -1)
             #print('y_pred:', y_pred)
-            #error = ((y_pred - y_i) ** 2 / 2).reshape(-1, 1)#.reshape(1, -1))
-            #error = binary_cross_entropy_loss(y_i, y_pred)
-            #print('Error:', error)
-            #grad = (y_pred - y_i).reshape(-1, 1)#.reshape(1, -1))
-            grad = binary_cross_entropy_derivative(y_i, y_pred).reshape(-1, 1)
+            error = binary_cross_entropy_loss(y_i, y_pred)
+            print('loss:', error)
+            #grad = binary_cross_entropy_derivative(y_i, y_pred).reshape(-1, 1)
             #print('grad:', grad)
-            #self.backward(grad, alpha)
 
             binary_pred = convert_to_binary_pred(y_pred) 
             binary_predictions[index] = binary_pred
     
         accuracy = accuracy_score(y_test, binary_predictions)
         #print(binary_predictions)
-        print('Accuray:', accuracy)
+        print('\nAccuracy:', accuracy)
         return binary_predictions

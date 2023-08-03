@@ -1,14 +1,17 @@
 import numpy as np
 import json
 from sklearn.metrics import accuracy_score
-from utils import load_data, compare_models, compare_optimizers, plot_
+from utils import load_data, split_data, compare_models, compare_optimizers, plot_learning_curves, save
 from DenseLayer import DenseLayer
 from NeuralNet import NeuralNet
 
-def prediction(data_test):
+def prediction():
     weights_path = 'saved_model_weights.npy'
     config_path = 'saved_model_config.json'
-    data_path = 'data.csv'
+    data_path = 'data_test.csv'
+
+    x, y = load_data(data_path)
+    data_test = np.hstack((x, y))
 
     weights = np.load(weights_path, allow_pickle=True)
     with open(config_path, 'r') as file:
@@ -66,16 +69,14 @@ def backprop_test():
     print(model.network[1].weights)
     print(model.network[1].bias)
 
-def main_test():
+def train_plot_save():
     np.random.seed(0)
     # Load and split the data
-    #x_train, x_test, y_train, y_test = load_data('data.csv')
-    x_train, x_val, y_train, y_val= load_data('data.csv')
+    x, y = load_data('data.csv')
+    x_train, x_val, y_train, y_val = split_data(x, y)
     #print(x_train.shape, x_val.shape, y_train.shape, y_val.shape)
 
-    # Combine x_train and y_train as data_train
     data_train = np.hstack((x_train, y_train))
-    # Combine x_val and y_val as data_valid
     data_valid = np.hstack((x_val, y_val))
 
     model = NeuralNet()
@@ -86,24 +87,17 @@ def main_test():
         DenseLayer(2, 2, activation='softmax', weights_initializer='random')
         ])
 
-    #print((model.get_weights()))
-    #print(np.mean(model.get_weights()))
     epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(None, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=70)
-    plot_(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
-    #save(model)
-    #prediction(data_valid)
-    model.predict(data_valid)
+    plot_learning_curves(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
+    save(model)
 
 def multiple_models_test():
     np.random.seed(0)
     # Load and split the data
-    #x_train, x_test, y_train, y_test = load_data('data.csv')
-    x_train, x_val, y_train, y_val= load_data('data.csv')
-    #print(x_train.shape, x_val.shape, y_train.shape, y_val.shape)
+    x, y = load_data('data.csv')
+    x_train, x_val, y_train, y_val = split_data(x, y)
 
-    # Combine x_train and y_train as data_train
     data_train = np.hstack((x_train, y_train))
-    # Combine x_val and y_val as data_valid
     data_valid = np.hstack((x_val, y_val))
 
     model1 = NeuralNet()
@@ -126,19 +120,15 @@ def multiple_models_test():
         DenseLayer(30, 15, activation='sigmoid'),
         DenseLayer(15, 2, activation='softmax', weights_initializer='random')
         ])
-    #model_list = [model1, model2, model3]
-    #print('velocity:', model3.velocity)
-    model_list = [model3]
-    #model3.fit(None, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=50)
-    #print(model3.params)
-    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=50)
-    #print(model1.metrics_history)
-    #model3.print_metrics_history()
 
-def nesterov_optimizer_test():
+    model_list = [model1, model2, model3]
+    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=50)
+
+def optimizer_test():
     np.random.seed(0)
 
-    x_train, x_val, y_train, y_val= load_data('data.csv')
+    x, y = load_data('data.csv')
+    x_train, x_val, y_train, y_val = split_data(x, y)
 
     data_train = np.hstack((x_train, y_train))
     data_valid = np.hstack((x_val, y_val))
@@ -167,7 +157,8 @@ def nesterov_optimizer_test():
 def same_model_test():
     np.random.seed(0)
 
-    x_train, x_val, y_train, y_val= load_data('data.csv')
+    x, y = load_data('data.csv')
+    x_train, x_val, y_train, y_val = split_data(x, y)
 
     data_train = np.hstack((x_train, y_train))
     data_valid = np.hstack((x_val, y_val))
@@ -195,7 +186,8 @@ def same_model_test():
 
 if __name__ == "__main__":
     #backprop_test()
-    #main_test()
+    #prediction()
+    train_plot_save()
     #multiple_models_test()
-    nesterov_optimizer_test()
+    #optimizer_test()
     #same_model_test()
