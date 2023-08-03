@@ -1,7 +1,7 @@
 import numpy as np
 import json
 from sklearn.metrics import accuracy_score
-from utils import load_data, compare_models, plot_
+from utils import load_data, compare_models, compare_optimizers, plot_
 from DenseLayer import DenseLayer
 from NeuralNet import NeuralNet
 
@@ -145,20 +145,24 @@ def nesterov_optimizer_test():
 
     model1 = NeuralNet(nesterov=False)
     model1.create_network([
-        DenseLayer(30, 20, activation='sigmoid'),
-        DenseLayer(20, 15, activation='sigmoid'),
+        DenseLayer(30, 15, activation='sigmoid'),
         DenseLayer(15, 2, activation='softmax', weights_initializer='zero')
         ])
 
     model2 = NeuralNet(nesterov=True)
     model2.create_network([
-        DenseLayer(30, 20, activation='sigmoid'),
-        DenseLayer(20, 15, activation='sigmoid'),
+        DenseLayer(30, 15, activation='sigmoid'),
         DenseLayer(15, 2, activation='softmax', weights_initializer='zero')
         ])
 
-    model_list = [model1, model2]
-    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=6e-2, batch_size='batch', epochs=50)
+    model3 = NeuralNet(optimizer='rmsprop')
+    model3.create_network([
+        DenseLayer(30, 15, activation='sigmoid'),
+        DenseLayer(15, 2, activation='softmax', weights_initializer='zero')
+        ])
+
+    model_list = [model1, model3]
+    compare_optimizers(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size='batch', epochs=30)
 
 def same_model_test():
     np.random.seed(0)
@@ -187,7 +191,7 @@ def same_model_test():
         ])
 
     model_list = [model1, model2, model3]
-    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size='batch', epochs=50)
+    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size='batch', epochs=30)
 
 if __name__ == "__main__":
     #backprop_test()

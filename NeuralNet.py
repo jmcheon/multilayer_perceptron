@@ -6,11 +6,20 @@ from utils import plot_
 from DenseLayer import DenseLayer, Layer
 
 class NeuralNet():
-    def __init__(self, momentum=0.9, nesterov=True):
+    def __init__(self, optimizer='momentum', momentum=0.9, decay_rate=0.9, nesterov=True):
         self.network = None
-        self.metrics_history = []
+        self.metrics_historic = []
+
+        self.optimizer = optimizer
+        if self.optimizer != 'momentum':
+            self.nesterov = False
+        else:
+            self.nesterov = nesterov
         self.momentum = momentum
-        self.nesterov = nesterov
+
+        self.decay_rate = decay_rate
+        self.epsilon = 1e-8
+
         self.params = {}
         self.velocity = {}
 
@@ -116,11 +125,11 @@ class NeuralNet():
 
         return json_data
 
-    def print_metrics_history(self):
-        if len(self.metrics_history) == 0:
+    def print_metrics_historic(self):
+        if len(self.metrics_historic) == 0:
             print("It hasn't trained yet.")
             return
-        for metric in self.metrics_history:
+        for metric in self.metrics_historic:
             print(f"epoch {metric['epoch']} - loss: {metric['loss']} - val_loss: {metric['val_loss']}")
         #print(f'epoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f} - val_loss: {val_loss:.4f}')
 
@@ -144,24 +153,23 @@ class NeuralNet():
         return accuracy, precision, recall, f1
 
     def update_parameters(self, grads, learning_rate):
-        for param_name in self.params:
-            # Nesterov momentum update
-            if self.nesterov:  
-                # Calculate the "look-ahead" gradient
-                look_ahead_grad = self.params[param_name] - self.momentum * self.velocity[param_name]
-                #print('look_ahead_grad:', look_ahead_grad.shape)
-                #print(f'self.velocity[{param_name}]:', self.velocity[param_name].shape)
-                #print(f'self.momentum * self.velocity[{param_name}]:', (self.momentum * self.velocity[param_name]).shape)
-                #print(f'grads[{param_name}]:', (grads[param_name]).shape)
-                #print(f'lr * grads[{param_name}]:', (learning_rate * grads[param_name]).shape)
-                # Update the velocity
-                self.velocity[param_name] = self.momentum * self.velocity[param_name] + learning_rate * grads[param_name]
-                # Update the parameters based on the "look-ahead" gradient
-                self.params[param_name] = look_ahead_grad - learning_rate * self.velocity[param_name]
-            # Vanilla momentum update
-            else:  
-                self.velocity[param_name] = self.momentum * self.velocity[param_name] - learning_rate * grads[param_name]
-                self.params[param_name] += self.velocity[param_name]
+        if self.optimizer == 'momentum':
+            for param_name in self.params:
+                if self.nesterov:
+                    look_ahead_grad = self.params[param_name] + self.momentum * self.velocity[param_name]
+                    self.velocity[param_name] = self.momentum * self.velocity[param_name] - learning_rate * grads[param_name]
+                    self.params[param_name] = look_ahead_grad - learning_rate * self.velocity[param_name]
+                else:
+                    self.velocity[param_name] = self.momentum * self.velocity[param_name] - learning_rate * grads[param_name]
+                    self.params[param_name] += self.velocity[param_name]
+        
+        elif self.optimizer == 'rmsprop':
+            for param_name in self.params:
+                self.velocity[param_name] = self.decay_rate * self.velocity[param_name] + (1 - self.decay_rate) * grads[param_name]**2
+                self.params[param_name] -= learning_rate * grads[param_name] / (np.sqrt(self.velocity[param_name]) + self.epsilon)
+        
+        else:
+            raise ValueError(f"Invalid optimizer '{self.optimizer}', expected 'momentum', 'rmsprop' or 'adam'.")
 
 
     def fit(self, network, data_train, data_valid, loss, learning_rate, batch_size, epochs):
@@ -272,7 +280,7 @@ class NeuralNet():
             print(f'epoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f} - val_loss: {val_loss:.4f}, ', end="")
             print(f"Accuracy: {val_accuracy:.2f}%, Precision: {val_precision:.2f}%, Recall: {val_recall:.2f}%, F1 score: {val_f1:.2f}%")
 
-            self.metrics_history.append({"epoch": f'{epoch + 1:0{padding_width}d}/{epochs}', "loss": f'{total_loss:.4f}', "val_loss": f'{val_loss:.4f}'})
+            self.metrics_historic.append({"epoch": f'{epoch + 1:0{padding_width}d}/{epochs}', "loss": f'{total_loss:.4f}', "val_loss": f'{val_loss:.4f}'})
 
     
             # Check if validation loss is decreasing
