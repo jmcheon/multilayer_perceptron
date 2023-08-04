@@ -1,7 +1,7 @@
 import numpy as np
-import json
-from sklearn.metrics import accuracy_score
-from utils import load_data, split_data, compare_models, compare_optimizers, plot_learning_curves, save
+import json, argparse, sys
+from utils import load_data, save, split_dataset_save
+from plots import compare_models, compare_optimizers, plot_learning_curves 
 from DenseLayer import DenseLayer
 from NeuralNet import NeuralNet
 
@@ -18,63 +18,14 @@ def prediction():
         json_config = json.load(file)
     config = json.loads(json_config)
 
-    #print(weights, weights.shape, weights[0].shape, type(weights))
-    #print(list(weights), type(list(weights)))
-    #print(config, type(config))
-    #print(config['network_topology'])
-    #for key, value in config.items():
-    #    print(f"{key}: {value}")
-
-    #print(config['network_topology'])
     model = NeuralNet()
     model.create_network(config['network_topology'])
     model.set_weights(list(weights))
     model.predict(data_test)
 
-def backprop_test():
-    np.random.seed(0)
-
-    x_train = np.array([[0.1, 0.2]])
-    y_train = np.array([[0.4, 0.6]])
-    x_val = np.array([[0.1, 0.2]])
-    y_val = np.array([[0.4, 0.6]])
-
-    data_train = np.hstack((x_train, y_train))
-    data_valid = np.hstack((x_val, y_val))
-
-    model = NeuralNet()
-
-    network = model.create_network([
-        DenseLayer(2, 2, activation=sigmoid),
-        DenseLayer(2, 2, activation=sigmoid, weights_initializer='heUniform')
-        ])
-
-    initial_weights = [
-        np.array([[0.3, 0.25], [0.4, 0.35]], dtype=np.float32), 
-        np.zeros(2, dtype=np.float32),  # Biases
-        np.array([[0.45, 0.4], [0.7, 0.6]], dtype=np.float32),  # Weights 
-        np.zeros(2, dtype=np.float32),  # Biases
-    ]
-    model.set_weights(initial_weights)
-    #print(model.network[0].weights)
-    #print(model.network[0].bias)
-    #print(model.network[1].weights)
-    #print(model.network[1].bias)
-
-    #model.fit(network, data_train, data_valid, loss=loss_, learning_rate=0.5, batch_size=8, epochs=100)
-    model.predict(data_train)
-    print("Updated weights and biases.")
-    print(model.network[0].weights)
-    print(model.network[0].bias)
-    print(model.network[1].weights)
-    print(model.network[1].bias)
-
 def train_plot_save():
-    np.random.seed(0)
-    # Load and split the data
-    x, y = load_data('data.csv')
-    x_train, x_val, y_train, y_val = split_data(x, y)
-    #print(x_train.shape, x_val.shape, y_train.shape, y_val.shape)
+    x_train, y_train = load_data(train_path)
+    x_val, y_val = load_data(valid_path)
 
     data_train = np.hstack((x_train, y_train))
     data_valid = np.hstack((x_val, y_val))
@@ -87,15 +38,15 @@ def train_plot_save():
         DenseLayer(2, 2, activation='softmax', weights_initializer='random')
         ])
 
-    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(None, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=70)
+    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(None, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=30)
     plot_learning_curves(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
     save(model)
 
 def multiple_models_test():
-    np.random.seed(0)
-    # Load and split the data
-    x, y = load_data('data.csv')
-    x_train, x_val, y_train, y_val = split_data(x, y)
+    print("Compare multiple models...")
+
+    x_train, y_train = load_data(train_path)
+    x_val, y_val = load_data(valid_path)
 
     data_train = np.hstack((x_train, y_train))
     data_valid = np.hstack((x_val, y_val))
@@ -125,10 +76,10 @@ def multiple_models_test():
     compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=50)
 
 def optimizer_test():
-    np.random.seed(0)
+    print("Compare optimizers...")
 
-    x, y = load_data('data.csv')
-    x_train, x_val, y_train, y_val = split_data(x, y)
+    x_train, y_train = load_data(train_path)
+    x_val, y_val = load_data(valid_path)
 
     data_train = np.hstack((x_train, y_train))
     data_valid = np.hstack((x_val, y_val))
@@ -155,10 +106,10 @@ def optimizer_test():
     compare_optimizers(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size='batch', epochs=30)
 
 def same_model_test():
-    np.random.seed(0)
+    print("Compare same models...")
 
-    x, y = load_data('data.csv')
-    x_train, x_val, y_train, y_val = split_data(x, y)
+    x_train, y_train = load_data(train_path)
+    x_val, y_val = load_data(valid_path)
 
     data_train = np.hstack((x_train, y_train))
     data_valid = np.hstack((x_val, y_val))
@@ -184,10 +135,58 @@ def same_model_test():
     model_list = [model1, model2, model3]
     compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size='batch', epochs=30)
 
+def bonus_test(historic=False):
+    x_train, y_train = load_data(train_path)
+    x_val, y_val = load_data(valid_path)
+
+    data_train = np.hstack((x_train, y_train))
+    data_valid = np.hstack((x_val, y_val))
+
+    model = NeuralNet()
+    model.create_network([
+        DenseLayer(30, 15, activation='sigmoid'),
+        DenseLayer(15, 2, activation='softmax', weights_initializer='zero')
+        ])
+
+    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(None, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=5, epochs=70)
+    plot_learning_curves(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
+    if historic == True:
+        print("medel's metrics historic:\n", model.metrics_historic)
+
 if __name__ == "__main__":
-    #backprop_test()
-    #prediction()
-    train_plot_save()
-    #multiple_models_test()
-    #optimizer_test()
-    #same_model_test()
+    train_path = "data_train.csv"
+    valid_path = "data_valid.csv"
+    parser = argparse.ArgumentParser(description="multilayer perceptron")
+
+    parser.add_argument("-s", "--split", type=str, default=None,
+                        help="Split dataset into train and validation sets.")
+
+    parser.add_argument("-t", "--train", action="store_true", default=False,
+                        help="Train with dataset.")
+
+    parser.add_argument("-p", "--predict", action="store_true", default=False,
+                        help="Predict using saved model.")
+
+    parser.add_argument("-c", "--compare", type=str, default=None, nargs='?', choices=["models", "optimizers", "same models", "early stopping", "historic"],
+                        help="Compare models by plotting learning curves.")
+
+    args = parser.parse_args()
+
+    if args.split:
+        split_dataset_save(args.split, train_path, valid_path, train_size=0.8, random_state=42)
+    elif args.train:
+        train_plot_save()
+    elif args.predict:
+        prediction()
+    elif args.compare == "models":
+        multiple_models_test()
+    elif args.compare == "optimizers":
+        optimizer_test()
+    elif args.compare == "same models":
+        same_model_test()
+    elif args.compare == "early stopping":
+        bonus_test()
+    elif args.compare == "historic":
+        bonus_test(True)
+    else:
+        print(f"Usage: python {sys.argv[0]} -h")

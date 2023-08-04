@@ -1,6 +1,6 @@
 import numpy as np
 import json
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
+from metrics import accuracy_score, precision_score, recall_score, f1_score
 from utils import binary_cross_entropy_loss, binary_cross_entropy_derivative, convert_to_binary_pred
 from DenseLayer import DenseLayer, Layer
 
@@ -129,7 +129,6 @@ class NeuralNet():
             return
         for metric in self.metrics_historic:
             print(f"epoch {metric['epoch']} - loss: {metric['loss']} - val_loss: {metric['val_loss']}")
-        #print(f'epoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f} - val_loss: {val_loss:.4f}')
 
     def create_mini_batches(self, x, y, batch_size):
         if isinstance(batch_size, str) and batch_size == 'batch':
@@ -144,10 +143,16 @@ class NeuralNet():
 
     def evaluate_metrics(self, y, y_pred):
         accuracy = accuracy_score(y, y_pred)
-        precision = precision_score(y, y_pred, average='weighted', zero_division=0)
-        recall = recall_score(y, y_pred, average='weighted')
-        f1 = f1_score(y, y_pred, average='weighted')
+        #precision = precision_score(y, y_pred, average='weighted', zero_division=0)
+        #recall = recall_score(y, y_pred, average='weighted')
+        #f1 = f1_score(y, y_pred, average='weighted')
+        precision = precision_score(y, y_pred, zero_division=0)
+        recall = recall_score(y, y_pred)
+        f1 = f1_score(y, y_pred)
 
+        #print(type(accuracy), type(precision), type(recall), type(f1))
+        #print((accuracy.shape), (precision.shape), (recall.shape), (f1.shape))
+        #print((accuracy), (precision), (recall), (f1))
         return accuracy, precision, recall, f1
 
     def update_parameters(self, grads, learning_rate):
@@ -214,17 +219,12 @@ class NeuralNet():
             for x_batch, y_batch in self.create_mini_batches(x_train, y_train, batch_size):
                 y_train_batch = np.vstack((y_train_batch, y_batch))
                 batch_loss = 0
-                for index, (x_i, y_i) in enumerate(zip(x_batch, y_batch)):
+                for x_i, y_i in zip(x_batch, y_batch):
                     y_pred = (self.forward(x_i.reshape(1, -1))).reshape(1, -1)
                     #print('y_pred:', y_pred, 'x_i:', x_i, 'y_i:', y_i)
-                    binary_pred = convert_to_binary_pred(y_pred) 
-                    #print('binary_pred:', binary_pred, binary_pred.shape)
-                    binary_predictions = np.vstack((binary_predictions, binary_pred))
+                    binary_predictions = np.vstack((binary_predictions, convert_to_binary_pred(y_pred)))
                     #print('binary_predictions:', binary_predictions.shape)
-                    #binary_predictions[index] = binary_pred
-                    #grad = nll_grad(y_pred, y_i).reshape(-1, 1)#.reshape(1, -1))
                     grad = binary_cross_entropy_derivative(y_i, y_pred).reshape(-1, 1)
-                    #total_loss = loss(y_i, y_pred)
                     batch_loss = loss(y_i, y_pred)
                     grads = self.backward(grad, alpha)
                     self.update_parameters(grads, alpha)
@@ -251,12 +251,10 @@ class NeuralNet():
             for x_batch, y_batch in self.create_mini_batches(x_val, y_val, batch_size):
                 y_val_batch = np.vstack((y_val_batch, y_batch))
                 val_batch_loss = 0
-                for index, (x_val_i, y_val_i) in enumerate(zip(x_batch, y_batch)):
+                for x_val_i, y_val_i in zip(x_batch, y_batch):
                     y_val_pred = (self.forward(x_val_i.reshape(1, -1))).reshape(1, -1)
                     val_batch_loss = loss(y_val_i, y_val_pred)
-                    val_binary_pred = convert_to_binary_pred(y_val_pred) 
-                    #val_binary_predictions[index] = val_binary_pred
-                    val_binary_predictions = np.vstack((val_binary_predictions, val_binary_pred))
+                    val_binary_predictions = np.vstack((val_binary_predictions, convert_to_binary_pred(y_val_pred)))
 
                 val_loss += val_batch_loss
                 n_val_batches += 1
@@ -285,17 +283,17 @@ class NeuralNet():
                 best_loss = val_loss
                 counter = 0
             else:
-                pass
-                #counter += 1
+                counter += 1
     
             # Learning rate decay
             if counter >= lr_decay_patience:
                 #alpha *= lr_decay_factor
                 #print(f"Learning rate decayed to {alpha}.")
-                counter = 0
+                #counter = 0
                 pass
     
             # Stop early if the validation loss hasn't improved for 'patience' epochs
+            #print("counter:" counter)
             if counter >= patience:
                 print(f"Early stopping at epoch {epoch}.")
                 break

@@ -1,10 +1,6 @@
 import numpy as np
 import pandas as pd
 import json, sys
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
 
 # Helper functions
 def mse(y, y_pred):
@@ -50,14 +46,96 @@ def save(model):
     np.save('./saved_model_weights.npy', model_weights)
     print("> Saving model weights to './saved_model_weights.npy'")
 
+class StandardScaler:
+    def __init__(self):
+        self.mean = None
+        self.scale = None
+
+    def fit(self, X):
+        self.mean = np.mean(X, axis=0)
+        self.scale = np.std(X, axis=0)
+        return self
+
+    def transform(self, X):
+        if self.mean is None or self.scale is None:
+            raise ValueError("fit method must be called before transform")
+        return (X - self.mean) / self.scale
+
+    def fit_transform(self, X):
+        return self.fit(X).transform(X)
+
+def split_dataset_save(filename, train_file, val_file, train_size=0.8, random_state=None):
+    df = pd.read_csv(filename, header=None)
+    # Split the dataset into training and validation sets
+    train_data_np, val_data_np = data_spliter2(df.values, train_size, random_state)
+    
+    # Convert NumPy arrays back to Pandas DataFrames
+    train_data = pd.DataFrame(train_data_np)
+    val_data = pd.DataFrame(val_data_np)
+    # Save the training and validation sets as CSV files
+    train_data.to_csv(train_file, index=False, header=False)
+    val_data.to_csv(val_file, index=False, header=False)
+
+    print(f"Saved train data to {train_file}")
+    print(f"Saved validation data to {val_file}")
+
+def data_spliter2(data, proportion, random_state=None):
+    for v in [data]:
+        if not isinstance(v, np.ndarray):
+    	    print(f"Invalid input: argument {v} of ndarray type required")	
+    	    return None
+    
+    if not isinstance(proportion, float):
+        print(f"Invalid input: argument proportion of float type required")	
+        return None
+
+    if random_state is not None:
+        np.random.default_rng(random_state).shuffle(data)
+    else:
+        np.random.shuffle(data)
+
+    p = int(data.shape[0] * proportion)
+    data_train, data_valid = data[:p], data[p:]
+    return data_train, data_valid 
+
+def data_spliter(x, y, proportion, random_state=None):
+    for v in [x, y]:
+        if not isinstance(v, np.ndarray):
+    	    print(f"Invalid input: argument {v} of ndarray type required")	
+    	    return None
+    
+    if not isinstance(proportion, float):
+        print(f"Invalid input: argument proportion of float type required")	
+        return None
+
+    if not x.ndim == 2:
+        print(f"Invalid input: wrong shape of x", x.shape)
+        return None
+
+    if random_state is not None:
+        np.random.default_rng(random_state).shuffle(data)
+    else:
+        np.random.shuffle(data)
+
+    data = np.hstack((x, y))
+    p = int(x.shape[0] * proportion)
+    x_train, x_test= data[:p, :-1], data[p:, :-1]
+    y_train, y_test = data[:p, -1:], data[p:, -1:] 
+    return x_train, x_test, y_train, y_test
+
 def split_data(x, y):
-    return train_test_split(x, y, test_size=0.2, random_state=42, stratify=y)
+    return data_spliter(x, y, 0.8, 42)
 
 def load_data(filename):
-    data = pd.read_csv(filename, header=None)
-    data[1] = data[1].map({"M": 1, "B": 0})
-    y = data[1].values
-    x = data.drop([0, 1], axis=1).values
+    try:
+        df = pd.read_csv(filename, header=None)
+    except:
+        print(f"Invalid file error: {filename} doesn't exist.")
+        sys.exit()
+    df[1] = df[1].map({"M": 1, "B": 0})
+    y = df[1].values
+    x = df.drop([0, 1], axis=1).values
+
     # Normalize the data
     scaler = StandardScaler()
     x = scaler.fit_transform(x)
@@ -73,102 +151,3 @@ def one_hot_encode_binary_labels(labels):
 
     return one_hot_encoded_labels
 
-
-def plot_learning_curves(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list):
-    #epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = train(x, y, net)
-    fig, axes = plt.subplots(1, 2, figsize=(15, 5))
-    for i in range(2):
-        ax = axes[i]
-        if (i == 0):
-            ax.plot(epoch_list, loss_list, label='training loss')
-            ax.plot(epoch_list, val_loss_list, label='validation loss')
-            ax.set_xlabel('Epoch')
-            ax.set_ylabel('Loss')
-            ax.set_title(f'Learning Curves for loss')
-            ax.legend()
-        else:
-            ax.plot(epoch_list, accuracy_list, label='training accuracy')
-            ax.plot(epoch_list, val_accuracy_list, label='validation accuracy')
-            ax.set_xlabel('Epoch')
-            ax.set_ylabel('Accuracy')
-            ax.set_title(f'Learning Curves for accuracy')
-            ax.legend()
-
-    plt.show()
-
-def compare_models(data_train, data_valid, model_list, loss, learning_rate, batch_size, epochs):
-    fig, axes = plt.subplots(2, 2, figsize=(20, 15))
-    for index, model in enumerate(model_list):
-        current_model_index = index + 1
-        print(f"\nTraining model #{current_model_index}...")
-        epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(None, data_train, data_valid, loss, learning_rate, batch_size, epochs)
-        # Plot training and validation accuracy and loss
-        for i in range(2):
-            ax = axes[0][i]
-            if (i == 0):
-                ax.plot(epoch_list, loss_list, label=f'model #{current_model_index} training loss')
-                ax.set_xlabel('Epoch')
-                ax.set_ylabel('Loss')
-                ax.set_title(f'[Batch size:{batch_size}] Learning Curves for training loss:{loss}')
-                ax.legend()
-            else:
-                ax.plot(epoch_list, accuracy_list, label=f'model #{current_model_index} training accuracy')
-                ax.set_xlabel('Epoch')
-                ax.set_ylabel('Accuracy')
-                ax.set_title(f'[Batch size:{batch_size}] Learning Curves for training accuracy')
-                ax.legend()
-        for i in range(2):
-            ax = axes[1][i]
-            if (i == 0):
-                ax.plot(epoch_list, val_loss_list, label=f'model #{current_model_index} validation loss')
-                ax.set_xlabel('Epoch')
-                ax.set_ylabel('Loss')
-                ax.set_title(f'[Batch size:{batch_size}] Learning Curves for validation loss:{loss}')
-                ax.legend()
-            else:
-                ax.plot(epoch_list, val_accuracy_list, label=f'model #{current_model_index} validation accuracy')
-                ax.set_xlabel('Epoch')
-                ax.set_ylabel('Accuracy')
-                ax.set_title(f'[Batch size:{batch_size}] Learning Curves for validation accuracy')
-                ax.legend()
-    plt.show()
-
-def compare_optimizers(data_train, data_valid, model_list, loss, learning_rate, batch_size, epochs):
-    fig, axes = plt.subplots(2, 2, figsize=(20, 15))
-    for index, model in enumerate(model_list):
-        optimizer = model.optimizer
-        if model.nesterov == True:
-            optimizer = 'nesterov' 
-        current_model_index = index + 1
-        print(f"\nTraining model #{current_model_index}...")
-        epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(None, data_train, data_valid, loss, learning_rate, batch_size, epochs)
-        # Plot training and validation accuracy and loss
-        for i in range(2):
-            ax = axes[0][i]
-            if (i == 0):
-                ax.plot(epoch_list, loss_list, label=f'{optimizer} training loss')
-                ax.set_xlabel('Epoch')
-                ax.set_ylabel('Loss')
-                ax.set_title(f'[Batch size:{batch_size}] Learning Curves for training loss:{loss}')
-                ax.legend()
-            else:
-                ax.plot(epoch_list, accuracy_list, label=f'{optimizer} training accuracy')
-                ax.set_xlabel('Epoch')
-                ax.set_ylabel('Accuracy')
-                ax.set_title(f'[Batch size:{batch_size}] Learning Curves for training accuracy')
-                ax.legend()
-        for i in range(2):
-            ax = axes[1][i]
-            if (i == 0):
-                ax.plot(epoch_list, val_loss_list, label=f'{optimizer} validation loss')
-                ax.set_xlabel('Epoch')
-                ax.set_ylabel('Loss')
-                ax.set_title(f'[Batch size:{batch_size}] Learning Curves for validation loss:{loss}')
-                ax.legend()
-            else:
-                ax.plot(epoch_list, val_accuracy_list, label=f'{optimizer} validation accuracy')
-                ax.set_xlabel('Epoch')
-                ax.set_ylabel('Accuracy')
-                ax.set_title(f'[Batch size:{batch_size}] Learning Curves for validation accuracy')
-                ax.legend()
-    plt.show()
