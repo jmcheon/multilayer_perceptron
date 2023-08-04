@@ -1,7 +1,8 @@
 import numpy as np
 import json
 from metrics import accuracy_score, precision_score, recall_score, f1_score
-from utils import binary_cross_entropy_loss, binary_cross_entropy_derivative, convert_to_binary_pred
+from losses import binary_cross_entropy_loss, binary_cross_entropy_derivative 
+from utils import convert_to_binary_pred
 from DenseLayer import DenseLayer, Layer
 
 class NeuralNet():
@@ -49,6 +50,19 @@ class NeuralNet():
             self.velocity[param_name] = np.zeros_like(param_value)
 
         return network
+
+    def save_model(self):
+        # Save model configuration as a JSON file
+        model_config = self.to_json()
+        with open('./saved_model_config.json', 'w') as json_file:
+            json.dump(model_config, json_file)
+            print("> Saving model configuration to './saved_model_config.json'")
+        
+        # Save model weights as a .npy file
+        model_weights = self.get_weights()
+        np.save('./saved_model_weights.npy', model_weights)
+        print("> Saving model weights to './saved_model_weights.npy'")
+
 
     def forward(self, input_data):
         input_data = self.network[0].forward(input_data.T)
@@ -293,9 +307,7 @@ class NeuralNet():
             y_pred = (self.forward(x_i.reshape(1, -1))).reshape(1, -1)
             error = binary_cross_entropy_loss(y_i, y_pred)
             print('loss:', error)
-
-            binary_pred = convert_to_binary_pred(y_pred) 
-            binary_predictions[index] = binary_pred
+            binary_predictions[index] = convert_to_binary_pred(y_pred) 
     
         accuracy = accuracy_score(y_test, binary_predictions)
         print('\nAccuracy:', accuracy)

@@ -1,6 +1,6 @@
 import numpy as np
 import json, argparse, sys
-from utils import load_data, save, split_dataset_save
+from utils import load_split_data, split_dataset_save
 from plots import compare_models, compare_optimizers, plot_learning_curves 
 from DenseLayer import DenseLayer
 from NeuralNet import NeuralNet
@@ -10,7 +10,7 @@ def prediction():
     config_path = 'saved_model_config.json'
     data_path = 'data_test.csv'
 
-    x, y = load_data(data_path)
+    x, y = load_split_data(data_path)
     data_test = np.hstack((x, y))
 
     try:
@@ -32,8 +32,8 @@ def prediction():
     model.predict(data_test)
 
 def train_plot_save():
-    x_train, y_train = load_data(train_path)
-    x_val, y_val = load_data(valid_path)
+    x_train, y_train = load_split_data(train_path)
+    x_val, y_val = load_split_data(valid_path)
 
     data_train = np.hstack((x_train, y_train))
     data_valid = np.hstack((x_val, y_val))
@@ -48,13 +48,13 @@ def train_plot_save():
 
     epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=30)
     plot_learning_curves(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
-    save(model)
+    model.save_model()
 
 def multiple_models_test():
     print("Compare multiple models...")
 
-    x_train, y_train = load_data(train_path)
-    x_val, y_val = load_data(valid_path)
+    x_train, y_train = load_split_data(train_path)
+    x_val, y_val = load_split_data(valid_path)
 
     data_train = np.hstack((x_train, y_train))
     data_valid = np.hstack((x_val, y_val))
@@ -86,8 +86,8 @@ def multiple_models_test():
 def optimizer_test():
     print("Compare optimizers...")
 
-    x_train, y_train = load_data(train_path)
-    x_val, y_val = load_data(valid_path)
+    x_train, y_train = load_split_data(train_path)
+    x_val, y_val = load_split_data(valid_path)
 
     data_train = np.hstack((x_train, y_train))
     data_valid = np.hstack((x_val, y_val))
@@ -116,8 +116,8 @@ def optimizer_test():
 def same_model_test():
     print("Compare same models...")
 
-    x_train, y_train = load_data(train_path)
-    x_val, y_val = load_data(valid_path)
+    x_train, y_train = load_split_data(train_path)
+    x_val, y_val = load_split_data(valid_path)
 
     data_train = np.hstack((x_train, y_train))
     data_valid = np.hstack((x_val, y_val))
@@ -144,8 +144,8 @@ def same_model_test():
     compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size='batch', epochs=30)
 
 def bonus_test(historic=False):
-    x_train, y_train = load_data(train_path)
-    x_val, y_val = load_data(valid_path)
+    x_train, y_train = load_split_data(train_path)
+    x_val, y_val = load_split_data(valid_path)
 
     data_train = np.hstack((x_train, y_train))
     data_valid = np.hstack((x_val, y_val))

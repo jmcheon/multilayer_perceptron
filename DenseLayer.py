@@ -1,5 +1,6 @@
 import numpy as np
-from utils import sigmoid, softmax, heUniform
+from utils import heUniform
+from activations import sigmoid, softmax
 
 class Layer:
     def __init__(self):
@@ -56,8 +57,8 @@ class DenseLayer(Layer):
         bias_gradient = output_gradient * activation_gradient
 
         self.bias -= alpha * output_gradient * activation_gradient
-        output_gradient = np.dot(self.weights.T, output_gradient * activation_gradient)
+        input_gradient = np.dot(self.weights.T, output_gradient * activation_gradient)
         self.weights -= alpha * weights_gradient
 
-        return output_gradient, weights_gradient, bias_gradient
+        return input_gradient, weights_gradient, bias_gradient
 
