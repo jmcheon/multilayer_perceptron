@@ -145,7 +145,7 @@ def load_data(filename):
 
 def one_hot_encode_binary_labels(labels):
     one_hot_encoded_labels = np.zeros((len(labels), 2))
-    print(one_hot_encoded_labels.shape)
+    #print(one_hot_encoded_labels.shape)
     for i, label in enumerate(labels):
         one_hot_encoded_labels[i, int(label)] = 1
 

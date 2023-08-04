@@ -13,10 +13,18 @@ def prediction():
     x, y = load_data(data_path)
     data_test = np.hstack((x, y))
 
-    weights = np.load(weights_path, allow_pickle=True)
-    with open(config_path, 'r') as file:
-        json_config = json.load(file)
-    config = json.loads(json_config)
+    try:
+        weights = np.load(weights_path, allow_pickle=True)
+    except:
+        print(f"Input file errer: {weights_path} doesn't exist.")
+        sys.exit()
+    try:
+        with open(config_path, 'r') as file:
+            json_config = json.load(file)
+        config = json.loads(json_config)
+    except:
+        print(f"Input file errer: {config_path} doesn't exist.")
+        sys.exit()
 
     model = NeuralNet()
     model.create_network(config['network_topology'])
@@ -38,7 +46,7 @@ def train_plot_save():
         DenseLayer(2, 2, activation='softmax', weights_initializer='random')
         ])
 
-    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(None, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=30)
+    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=2, epochs=30)
     plot_learning_curves(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
     save(model)
 
@@ -148,7 +156,7 @@ def bonus_test(historic=False):
         DenseLayer(15, 2, activation='softmax', weights_initializer='zero')
         ])
 
-    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(None, data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=5, epochs=70)
+    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=5, epochs=70)
     plot_learning_curves(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
     if historic == True:
         print("medel's metrics historic:\n", model.metrics_historic)

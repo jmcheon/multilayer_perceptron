@@ -26,7 +26,7 @@ def compare_models(data_train, data_valid, model_list, loss, learning_rate, batc
     for index, model in enumerate(model_list):
         current_model_index = index + 1
         print(f"\nTraining model #{current_model_index}...")
-        epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(None, data_train, data_valid, loss, learning_rate, batch_size, epochs)
+        epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(data_train, data_valid, loss, learning_rate, batch_size, epochs)
         # Plot training and validation accuracy and loss
         for i in range(2):
             ax = axes[0][i]
@@ -66,7 +66,7 @@ def compare_optimizers(data_train, data_valid, model_list, loss, learning_rate, 
             optimizer = 'nesterov' 
         current_model_index = index + 1
         print(f"\nTraining model #{current_model_index}...")
-        epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(None, data_train, data_valid, loss, learning_rate, batch_size, epochs)
+        epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(data_train, data_valid, loss, learning_rate, batch_size, epochs)
         # Plot training and validation accuracy and loss
         for i in range(2):
             ax = axes[0][i]

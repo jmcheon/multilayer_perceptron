@@ -86,7 +86,6 @@ class NeuralNet():
         if not isinstance(initial_weights, list):
             raise TypeError("Invalid type of initial_weights, a list of weights required.")
         if not len(initial_weights) == 2 * len(self.network):
-            #print(len(initial_weights), len(self.network))
             raise ValueError("Invalid input of list: not enought values to set weights and biases.")
 
         for index, layer in zip(range(0, len(initial_weights), 2), self.network):
@@ -143,16 +142,10 @@ class NeuralNet():
 
     def evaluate_metrics(self, y, y_pred):
         accuracy = accuracy_score(y, y_pred)
-        #precision = precision_score(y, y_pred, average='weighted', zero_division=0)
-        #recall = recall_score(y, y_pred, average='weighted')
-        #f1 = f1_score(y, y_pred, average='weighted')
         precision = precision_score(y, y_pred, zero_division=0)
         recall = recall_score(y, y_pred)
         f1 = f1_score(y, y_pred)
 
-        #print(type(accuracy), type(precision), type(recall), type(f1))
-        #print((accuracy.shape), (precision.shape), (recall.shape), (f1.shape))
-        #print((accuracy), (precision), (recall), (f1))
         return accuracy, precision, recall, f1
 
     def update_parameters(self, grads, learning_rate):
@@ -175,7 +168,7 @@ class NeuralNet():
             raise ValueError(f"Invalid optimizer '{self.optimizer}', expected 'momentum', 'rmsprop' or 'adam'.")
 
 
-    def fit(self, network, data_train, data_valid, loss, learning_rate, batch_size, epochs):
+    def fit(self, data_train, data_valid, loss, learning_rate, batch_size, epochs):
         if loss == 'binary_cross_entropy_loss':
             loss = binary_cross_entropy_loss
         patience=5
@@ -183,9 +176,6 @@ class NeuralNet():
         lr_decay_patience=3
      
         accuracy_list = []
-        precision_list = []
-        recall_list = []
-        f1_list = []
         loss_list = []
 
         val_accuracy_list = []
@@ -214,16 +204,13 @@ class NeuralNet():
             n_batches = 0
 
             y_train_batch = np.empty((0, y_train.shape[1]))
-            #binary_predictions = np.zeros_like(y_train)
             binary_predictions = np.empty((0, y_train.shape[1]))
             for x_batch, y_batch in self.create_mini_batches(x_train, y_train, batch_size):
                 y_train_batch = np.vstack((y_train_batch, y_batch))
                 batch_loss = 0
                 for x_i, y_i in zip(x_batch, y_batch):
                     y_pred = (self.forward(x_i.reshape(1, -1))).reshape(1, -1)
-                    #print('y_pred:', y_pred, 'x_i:', x_i, 'y_i:', y_i)
                     binary_predictions = np.vstack((binary_predictions, convert_to_binary_pred(y_pred)))
-                    #print('binary_predictions:', binary_predictions.shape)
                     grad = binary_cross_entropy_derivative(y_i, y_pred).reshape(-1, 1)
                     batch_loss = loss(y_i, y_pred)
                     grads = self.backward(grad, alpha)
@@ -234,8 +221,6 @@ class NeuralNet():
 
             total_loss /= n_batches
     
-            #print('y_train_batch:', y_train_batch.shape, 'binary_predictions:', binary_predictions.shape)
-            #metrics = classification_report(y_train_batch, binary_predictions)
             accuracy = accuracy_score(y_train_batch, binary_predictions)
             accuracy_list.append(accuracy)
             loss_list.append(total_loss)
@@ -246,7 +231,6 @@ class NeuralNet():
             n_val_batches = 0
 
             y_val_batch = np.empty((0, y_val.shape[1]))
-            #val_binary_predictions = np.zeros_like(y_val)
             val_binary_predictions = np.empty((0, y_val.shape[1]))
             for x_batch, y_batch in self.create_mini_batches(x_val, y_val, batch_size):
                 y_val_batch = np.vstack((y_val_batch, y_batch))
@@ -261,7 +245,6 @@ class NeuralNet():
 
             val_loss /= n_val_batches
     
-            #val_accuracy = accuracy_score(y_val_batch, val_binary_predictions)
             val_accuracy, val_precision, val_recall, val_f1 = self.evaluate_metrics(y_val_batch, val_binary_predictions)
             val_accuracy_list.append(val_accuracy)
             val_precision_list.append(val_precision)
@@ -293,7 +276,6 @@ class NeuralNet():
                 pass
     
             # Stop early if the validation loss hasn't improved for 'patience' epochs
-            #print("counter:" counter)
             if counter >= patience:
                 print(f"Early stopping at epoch {epoch}.")
                 break
@@ -303,23 +285,18 @@ class NeuralNet():
         return epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list
 
     def predict(self, data_test):
-        alpha = 0.5
         x_test = data_test[:, :-2]
         y_test = data_test[:, -2:]
 
         binary_predictions = np.zeros_like(y_test)
         for index, (x_i, y_i) in enumerate(zip(x_test, y_test)):
             y_pred = (self.forward(x_i.reshape(1, -1))).reshape(1, -1)
-            #print('y_pred:', y_pred)
             error = binary_cross_entropy_loss(y_i, y_pred)
             print('loss:', error)
-            #grad = binary_cross_entropy_derivative(y_i, y_pred).reshape(-1, 1)
-            #print('grad:', grad)
 
             binary_pred = convert_to_binary_pred(y_pred) 
             binary_predictions[index] = binary_pred
     
         accuracy = accuracy_score(y_test, binary_predictions)
-        #print(binary_predictions)
         print('\nAccuracy:', accuracy)
         return binary_predictions
