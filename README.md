@@ -1,3 +1,4 @@
+
 #  Multilayer Perceptron 
 >*_Summary: This project is an introduction to artificial neural networks, with the implementation of a multilayer perceptron_*
 
@@ -92,6 +93,8 @@ network = [
 | loss, accuracy for training and validation|
 |---------------------------------------------|
 |![learning_curves](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/b30945e9-3bed-4422-a265-62df8b109247)|
+Train accuracy: 0.9845 Validation accuracy: 0.9912
+
 ---
 ### Comparing models - 3 models of different neural networks
 
@@ -126,14 +129,16 @@ loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size=2, epochs=50
 | models |
 |---------------------------------------------|
 |![models](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/158914d6-d7f2-4fb3-a5ae-459ffc195456)|
-
+Model1 - Train accuracy: 0.9867 Validation accuracy: 0.9912
+Model2 - Train accuracy: 0.9823 Validation accuracy: 0.9912
+Model3 - Train accuracy: 0.9801 Validation accuracy: 0.9912
 ### Optimizers - RMSprop
 ``` python
 input_shape = 30
 output_shape = 2
 loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size='batch', epochs=30
 
-    model1 = NeuralNet()
+    model1 = NeuralNet(nesterov=False)
     model1.create_network([
         DenseLayer(input_shape, 15, activation='sigmoid'),
         DenseLayer(15, output_shape, activation='softmax', weights_initializer='zero')
@@ -149,3 +154,5 @@ loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size='batch', epochs
 | optimizers |
 |---------------------------------------------|
 |![optimizers](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/3844a386-720d-4b3c-8a8d-6c6b03ef39ce)|
+Model1 - Train accuracy: 0.9824 Validation accuracy: 0.9912
+Model2 - Train accuracy: 0.9758 Validation accuracy: 0.9912
