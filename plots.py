@@ -18,7 +18,7 @@ def plot_learning_curves(epoch_list, accuracy_list, loss_list, val_accuracy_list
             ax.set_ylabel('Accuracy')
             ax.set_title(f'Learning Curves for accuracy')
             ax.legend()
-
+    plt.tight_layout(pad=5)
     plt.show()
 
 def compare_models(data_train, data_valid, model_list, loss, learning_rate, batch_size, epochs):
@@ -56,6 +56,7 @@ def compare_models(data_train, data_valid, model_list, loss, learning_rate, batc
                 ax.set_ylabel('Accuracy')
                 ax.set_title(f'[Batch size:{batch_size}] Learning Curves for validation accuracy')
                 ax.legend()
+    plt.tight_layout(pad=5)
     plt.show()
 
 def compare_optimizers(data_train, data_valid, model_list, loss, learning_rate, batch_size, epochs):
@@ -96,4 +97,5 @@ def compare_optimizers(data_train, data_valid, model_list, loss, learning_rate, 
                 ax.set_ylabel('Accuracy')
                 ax.set_title(f'[Batch size:{batch_size}] Learning Curves for validation accuracy')
                 ax.legend()
+    plt.tight_layout(pad=5)
     plt.show()

@@ -6,7 +6,7 @@ from utils import convert_to_binary_pred
 from DenseLayer import DenseLayer, Layer
 
 class NeuralNet():
-    def __init__(self, optimizer='momentum', momentum=0.9, decay_rate=0.9, nesterov=True):
+    def __init__(self, optimizer='momentum', momentum=0.9, decay_rate=0.9, nesterov=False):
         self.network = None
         self.metrics_historic = []
 
