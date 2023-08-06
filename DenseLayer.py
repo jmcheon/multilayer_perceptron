@@ -56,9 +56,9 @@ class DenseLayer(Layer):
         weights_gradient = np.dot(output_gradient * activation_gradient, self.input_data.T)
         bias_gradient = output_gradient * activation_gradient
 
-        self.bias -= alpha * output_gradient * activation_gradient
         input_gradient = np.dot(self.weights.T, output_gradient * activation_gradient)
         self.weights -= alpha * weights_gradient
+        self.bias -= alpha * output_gradient * activation_gradient
 
         return input_gradient, weights_gradient, bias_gradient
 
