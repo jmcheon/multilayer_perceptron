@@ -1,0 +1,1 @@
+This program is an implementation of a Multilayer Perceptron (MLP), a type of artificial neural network designed for tasks such as classification, regression, and pattern recognition.

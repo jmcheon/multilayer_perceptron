@@ -1,7 +1,7 @@
 import numpy as np
 import json
 from metrics import accuracy_score, precision_score, recall_score, f1_score
-from losses import binary_cross_entropy_loss, binary_cross_entropy_derivative 
+from losses import binary_cross_entropy, binary_cross_entropy_derivative 
 from utils import convert_to_binary_pred
 from DenseLayer import DenseLayer, Layer
 
@@ -183,8 +183,12 @@ class NeuralNet():
 
 
     def fit(self, data_train, data_valid, loss, learning_rate, batch_size, epochs):
-        if loss == 'binary_cross_entropy_loss':
-            loss = binary_cross_entropy_loss
+        if loss == 'binary_cross_entropy':
+            loss = binary_cross_entropy
+            loss_prime = binary_cross_entropy_derivative
+        elif loss == 'mse':
+            loss = mse
+            loss_prime = mse_derivative
         patience=5
         lr_decay_factor=0.1
         lr_decay_patience=3
@@ -225,7 +229,7 @@ class NeuralNet():
                 for x_i, y_i in zip(x_batch, y_batch):
                     y_pred = (self.forward(x_i.reshape(1, -1))).reshape(1, -1)
                     binary_predictions = np.vstack((binary_predictions, convert_to_binary_pred(y_pred)))
-                    grad = binary_cross_entropy_derivative(y_i, y_pred).reshape(-1, 1)
+                    grad = loss_prime(y_i, y_pred).reshape(-1, 1)
                     batch_loss = loss(y_i, y_pred)
                     grads = self.backward(grad, alpha)
                     self.update_parameters(grads, alpha)
@@ -305,7 +309,7 @@ class NeuralNet():
         binary_predictions = np.zeros_like(y_test)
         for index, (x_i, y_i) in enumerate(zip(x_test, y_test)):
             y_pred = (self.forward(x_i.reshape(1, -1))).reshape(1, -1)
-            error = binary_cross_entropy_loss(y_i, y_pred)
+            error = binary_cross_entropy(y_i, y_pred)
             print('loss:', error)
             binary_predictions[index] = convert_to_binary_pred(y_pred) 
     

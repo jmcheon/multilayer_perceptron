@@ -46,7 +46,7 @@ def train_plot_save():
         DenseLayer(2, output_shape, activation='softmax', weights_initializer='random')
         ])
 
-    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size=2, epochs=30)
+    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(data_train, data_valid, loss='binary_cross_entropy', learning_rate=1e-3, batch_size=2, epochs=30)
     plot_learning_curves(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
     model.save_model()
 
@@ -81,7 +81,7 @@ def multiple_models_test():
         ])
 
     model_list = [model1, model2, model3]
-    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size=2, epochs=50)
+    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy', learning_rate=1e-3, batch_size=2, epochs=50)
 
 def optimizer_test():
     print("Compare optimizers...")
@@ -111,7 +111,7 @@ def optimizer_test():
         ])
 
     model_list = [model1, model3]
-    compare_optimizers(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size='batch', epochs=30)
+    compare_optimizers(data_train, data_valid, model_list, loss='binary_cross_entropy', learning_rate=1e-3, batch_size='batch', epochs=30)
 
 def same_model_test():
     print("Compare same models...")
@@ -141,7 +141,7 @@ def same_model_test():
         ])
 
     model_list = [model1, model2, model3]
-    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size='batch', epochs=30)
+    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy', learning_rate=1e-3, batch_size='batch', epochs=30)
 
 def bonus_test(historic=False):
     x_train, y_train = load_split_data(train_path)
@@ -156,7 +156,7 @@ def bonus_test(historic=False):
         DenseLayer(15, output_shape, activation='softmax', weights_initializer='zero')
         ])
 
-    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(data_train, data_valid, loss='binary_cross_entropy_loss', learning_rate=1e-2, batch_size=5, epochs=70)
+    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(data_train, data_valid, loss='binary_cross_entropy', learning_rate=1e-2, batch_size=5, epochs=70)
     plot_learning_curves(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
     if historic == True:
         print("medel's metrics historic:\n", model.metrics_historic)
@@ -168,7 +168,13 @@ if __name__ == "__main__":
     input_shape = 30
     output_shape = 2
 
-    parser = argparse.ArgumentParser(description="multilayer perceptron")
+    try:
+        with open('description.txt', 'r') as file:
+            description = file.read()
+    except:
+            description = "multilayer perceptron"
+
+    parser = argparse.ArgumentParser(description=description)
 
     parser.add_argument("-s", "--split", type=str, default=None,
                         help="Split dataset into train and validation sets.")
@@ -179,7 +185,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--predict", action="store_true", default=False,
                         help="Predict using saved model.")
 
-    parser.add_argument("-c", "--compare", type=str, default=None, nargs='?', choices=["models", "optimizers", "same models", "early stopping", "historic"],
+    parser.add_argument("-c", "--compare", type=str, default=None, nargs='?', choices=["models", "optimizers"],
                         help="Compare models by plotting learning curves.")
 
     args = parser.parse_args()

@@ -59,9 +59,11 @@ Class distribution: 357 benign, 212 malignant
 #### Usage
 ``` bash
 usage: multilayer_perceptron.py [-h] [-s SPLIT] [-t] [-p]
-                                [-c [{models,optimizers,same models,early stopping,historic}]]
+                                [-c [{models,optimizers}]]
 
-multilayer perceptron
+This program is an implementation of a Multilayer Perceptron (MLP), a type of
+artificial neural network designed for tasks such as classification,
+regression, and pattern recognition.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -69,17 +71,16 @@ optional arguments:
                         Split dataset into train and validation sets.
   -t, --train           Train with dataset.
   -p, --predict         Predict using saved model.
-  -c [{models,optimizers,same models,early stopping,historic}], 
-  --compare [{models,optimizers,same models,early stopping,historic}]
+  -c [{models,optimizers}], --compare [{models,optimizers}]
                         Compare models by plotting learning curves.
-```
+
 ### Training 
 
 #### Neural Network Topology
 ``` python
 input_shape = 30
 output_shape = 2
-loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size=2, epochs=30
+loss='binary_cross_entropy', learning_rate=1e-3, batch_size=2, epochs=30
 
 network = [
         DenseLayer(input_shape, 20, activation='sigmoid'),
@@ -101,7 +102,7 @@ Train accuracy: 0.9845 Validation accuracy: 0.9912
 ``` python
 input_shape = 30
 output_shape = 2
-loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size=2, epochs=50
+loss='binary_cross_entropy', learning_rate=1e-3, batch_size=2, epochs=50
 
     model1 = NeuralNet()
     model1.create_network([
@@ -136,7 +137,7 @@ Model3 - Train accuracy: 0.9801 Validation accuracy: 0.9912
 ``` python
 input_shape = 30
 output_shape = 2
-loss='binary_cross_entropy_loss', learning_rate=1e-3, batch_size='batch', epochs=30
+loss='binary_cross_entropy', learning_rate=1e-3, batch_size='batch', epochs=30
 
     model1 = NeuralNet(nesterov=False)
     model1.create_network([
