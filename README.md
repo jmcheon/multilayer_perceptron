@@ -73,6 +73,7 @@ optional arguments:
   -p, --predict         Predict using saved model.
   -c [{models,optimizers}], --compare [{models,optimizers}]
                         Compare models by plotting learning curves.
+```
 
 ### Training 
 
