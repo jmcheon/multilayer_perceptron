@@ -5,19 +5,10 @@ from utils import heUniform
 
 
 class Layer:
-    def __init__(self):
-        self.x = None
-        self.y = None
-
-    def forward(self, x):
-        pass
-
-    def backward(self, output_gradient, alpha):
-        pass
-
-class DenseLayer(Layer):
     def __init__(self, input_shape, output_shape, activation, weights_initializer='zero'):
         self.shape = (input_shape, output_shape)
+        self.x = None
+        self.y = None
 
         # Initialize weights and bias
         if weights_initializer == 'heUniform':
@@ -41,6 +32,17 @@ class DenseLayer(Layer):
             self.activation = sigmoid
         elif activation.lower() == 'softmax':
             self.activation = softmax
+
+    def forward(self, x):
+        pass
+
+    def backward(self, output_gradient, alpha):
+        pass
+
+class DenseLayer(Layer):
+    def __init__(self, input_shape, output_shape, activation, weights_initializer='zero'):
+        super().__init__(input_shape, output_shape, activation, weights_initializer)
+
 
     def set_weights(self, weights, bias):
         if weights.shape != self.weights.shape:
