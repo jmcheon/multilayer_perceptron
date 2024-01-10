@@ -1,9 +1,14 @@
+import argparse
+import json
+import sys
+
 import numpy as np
-import json, argparse, sys
-from utils import load_split_data, split_dataset_save
-from plots import compare_models, compare_optimizers, plot_learning_curves 
+
 from DenseLayer import DenseLayer
 from NeuralNet import NeuralNet
+from plots import compare_models, compare_optimizers, plot_learning_curves
+from utils import load_split_data, split_dataset_save
+
 
 def prediction():
     weights_path = 'saved_model_weights.npy'
@@ -42,8 +47,8 @@ def train_plot_save():
     network = model.create_network([
         DenseLayer(input_shape, 20, activation='sigmoid'),
         DenseLayer(20, 10, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(10, 2, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(2, output_shape, activation='softmax', weights_initializer='random')
+        DenseLayer(10, 1, activation='sigmoid', weights_initializer='random'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
     epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(data_train, data_valid, loss='binary_cross_entropy', learning_rate=1e-3, batch_size=2, epochs=30)
@@ -63,21 +68,21 @@ def multiple_models_test():
     model1.create_network([
         DenseLayer(input_shape, 20, activation='sigmoid'),
         DenseLayer(20, 10, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(10, 2, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(2, output_shape, activation='softmax', weights_initializer='random')
+        DenseLayer(10, 1, activation='sigmoid', weights_initializer='random'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
     model2 = NeuralNet()
     model2.create_network([
         DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, 8, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(8, output_shape, activation='softmax', weights_initializer='random')
+        DenseLayer(15, 1, activation='sigmoid', weights_initializer='random'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
     model3 = NeuralNet()
     model3.create_network([
-        DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, output_shape, activation='softmax', weights_initializer='random')
+        DenseLayer(input_shape, 1, activation='sigmoid'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
     model_list = [model1, model2, model3]
@@ -94,20 +99,20 @@ def optimizer_test():
 
     model1 = NeuralNet(nesterov=False)
     model1.create_network([
-        DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, output_shape, activation='softmax', weights_initializer='zero')
+        DenseLayer(input_shape, 1, activation='sigmoid'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
     model2 = NeuralNet(nesterov=True)
     model2.create_network([
-        DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, output_shape, activation='softmax', weights_initializer='zero')
+        DenseLayer(input_shape, 1, activation='sigmoid'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
     model3 = NeuralNet(optimizer='rmsprop')
     model3.create_network([
-        DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, output_shape, activation='softmax', weights_initializer='zero')
+        DenseLayer(input_shape, 1, activation='sigmoid'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
     model_list = [model1, model3]
@@ -124,20 +129,20 @@ def same_model_test():
 
     model1 = NeuralNet()
     model1.create_network([
-        DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, output_shape, activation='softmax', weights_initializer='zero')
+        DenseLayer(input_shape, 1, activation='sigmoid'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
     model2 = NeuralNet()
     model2.create_network([
-        DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, output_shape, activation='softmax', weights_initializer='zero')
+        DenseLayer(input_shape, 1, activation='sigmoid'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
     model3 = NeuralNet()
     model3.create_network([
-        DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, output_shape, activation='softmax', weights_initializer='zero')
+        DenseLayer(input_shape, 1, activation='sigmoid'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
     model_list = [model1, model2, model3]
@@ -152,8 +157,8 @@ def bonus_test(historic=False):
 
     model = NeuralNet()
     model.create_network([
-        DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, output_shape, activation='softmax', weights_initializer='zero')
+        DenseLayer(input_shape, 1, activation='sigmoid'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
     epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(data_train, data_valid, loss='binary_cross_entropy', learning_rate=1e-2, batch_size=5, epochs=70)

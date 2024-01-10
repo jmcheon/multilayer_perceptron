@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def count_labels(y_true, y_pred):
     label_counts = {}
     for t, p in zip(y_true, y_pred):
@@ -36,11 +37,14 @@ def precision_score(y_true, y_pred, zero_division=0):
         precisions.append(precision)
     return np.array(np.mean(precisions))
 
-def recall_score(y_true, y_pred):
+def recall_score(y_true, y_pred, zero_division=0):
     label_counts = count_labels(y_true, y_pred)
     recalls = []
     for label, count in label_counts.items():
-        recall = count['true_positives'] / (count['true_positives'] + count['false_negatives'])
+        try:
+            recall = count['true_positives'] / (count['true_positives'] + count['false_negatives'])
+        except ZeroDivisionError:
+            recall = zero_division
         recalls.append(recall)
     return np.array(np.mean(recalls))
 

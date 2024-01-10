@@ -1,6 +1,8 @@
 import numpy as np
+
+from activations import relu, sigmoid, softmax
 from utils import heUniform
-from activations import sigmoid, softmax
+
 
 class Layer:
     def __init__(self):
@@ -33,9 +35,11 @@ class DenseLayer(Layer):
 
 
         # Activation function
-        if activation == 'sigmoid':
+        if activation.lower() == 'relu':
+            self.activation = relu
+        elif activation.lower() == 'sigmoid':
             self.activation = sigmoid
-        elif activation == 'softmax':
+        elif activation.lower() == 'softmax':
             self.activation = softmax
 
     def set_weights(self, weights, bias):
