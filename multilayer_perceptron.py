@@ -51,8 +51,8 @@ def train_plot_save():
         DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
-    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(data_train, data_valid, loss='binary_cross_entropy', learning_rate=1e-3, batch_size=2, epochs=30)
-    plot_learning_curves(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
+    history = model.fit(data_train, data_valid, loss='binary_crossentropy', learning_rate=1e-3, batch_size=2, epochs=30)
+    plot_learning_curves(history)
     model.save_model()
 
 def multiple_models_test():
@@ -86,7 +86,7 @@ def multiple_models_test():
         ])
 
     model_list = [model1, model2, model3]
-    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy', learning_rate=1e-3, batch_size=2, epochs=50)
+    compare_models(data_train, data_valid, model_list, loss='binary_crossentropy', learning_rate=1e-3, batch_size=2, epochs=50)
 
 def optimizer_test():
     print("Compare optimizers...")
@@ -99,24 +99,28 @@ def optimizer_test():
 
     model1 = NeuralNet(nesterov=False)
     model1.create_network([
-        DenseLayer(input_shape, 1, activation='sigmoid'),
+        DenseLayer(input_shape, 10, activation='sigmoid'),
+        DenseLayer(10, 1, activation='sigmoid', weights_initializer='zero'),
         DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
     model2 = NeuralNet(nesterov=True)
     model2.create_network([
-        DenseLayer(input_shape, 1, activation='sigmoid'),
+        DenseLayer(input_shape, 20, activation='sigmoid'),
+        DenseLayer(20, 10, activation='sigmoid', weights_initializer='zero'),
+        DenseLayer(10, 1, activation='sigmoid', weights_initializer='zero'),
         DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
     model3 = NeuralNet(optimizer='rmsprop')
     model3.create_network([
-        DenseLayer(input_shape, 1, activation='sigmoid'),
+        DenseLayer(input_shape, 10, activation='sigmoid'),
+        DenseLayer(10, 1, activation='sigmoid', weights_initializer='zero'),
         DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
     model_list = [model1, model3]
-    compare_optimizers(data_train, data_valid, model_list, loss='binary_cross_entropy', learning_rate=1e-3, batch_size='batch', epochs=30)
+    compare_optimizers(data_train, data_valid, model_list, loss='binary_crossentropy', learning_rate=1e-3, batch_size='batch', epochs=30)
 
 def same_model_test():
     print("Compare same models...")
@@ -146,9 +150,9 @@ def same_model_test():
         ])
 
     model_list = [model1, model2, model3]
-    compare_models(data_train, data_valid, model_list, loss='binary_cross_entropy', learning_rate=1e-3, batch_size='batch', epochs=30)
+    compare_models(data_train, data_valid, model_list, loss='binary_crossentropy', learning_rate=1e-3, batch_size='batch', epochs=30)
 
-def bonus_test(historic=False):
+def bonus_test(history=False):
     x_train, y_train = load_split_data(train_path)
     x_val, y_val = load_split_data(valid_path)
 
@@ -161,10 +165,10 @@ def bonus_test(historic=False):
         DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
-    epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list = model.fit(data_train, data_valid, loss='binary_cross_entropy', learning_rate=1e-2, batch_size=5, epochs=70)
-    plot_learning_curves(epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list)
-    if historic == True:
-        print("medel's metrics historic:\n", model.metrics_historic)
+    model_history = model.fit(data_train, data_valid, loss='binary_crossentropy', learning_rate=1e-2, batch_size=5, epochs=30)
+    plot_learning_curves(model_history)
+    if history == True:
+        print("medel's history:\n", model.history)
 
 if __name__ == "__main__":
     train_path = "data_train.csv"
@@ -209,7 +213,7 @@ if __name__ == "__main__":
         same_model_test()
     elif args.compare == "early stopping":
         bonus_test()
-    elif args.compare == "historic":
+    elif args.compare == "history":
         bonus_test(True)
     else:
         print(f"Usage: python {sys.argv[0]} -h")

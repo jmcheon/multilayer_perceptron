@@ -24,7 +24,7 @@ def accuracy_score(y_true, y_pred):
     label_counts = count_labels(y_true, y_pred)
     true_positives = np.sum([count['true_positives'] for count in label_counts.values()])
     total = len(y_true)
-    return np.array(true_positives / total)
+    return (true_positives / total)
 
 def precision_score(y_true, y_pred, zero_division=0):
     label_counts = count_labels(y_true, y_pred)
@@ -35,7 +35,7 @@ def precision_score(y_true, y_pred, zero_division=0):
         except ZeroDivisionError:
             precision = zero_division
         precisions.append(precision)
-    return np.array(np.mean(precisions))
+    return (np.mean(precisions))
 
 def recall_score(y_true, y_pred, zero_division=0):
     label_counts = count_labels(y_true, y_pred)
@@ -46,7 +46,7 @@ def recall_score(y_true, y_pred, zero_division=0):
         except ZeroDivisionError:
             recall = zero_division
         recalls.append(recall)
-    return np.array(np.mean(recalls))
+    return (np.mean(recalls))
 
 def f1_score(y_true, y_pred):
     label_counts = count_labels(y_true, y_pred)
@@ -59,5 +59,5 @@ def f1_score(y_true, y_pred):
         except ZeroDivisionError:
             f1_score = 0
         f1_scores.append(f1_score)
-    return np.array(np.mean(f1_scores))
+    return (np.mean(f1_scores))
 

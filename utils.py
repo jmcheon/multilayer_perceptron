@@ -1,6 +1,8 @@
+import sys
+
 import numpy as np
 import pandas as pd
-import sys
+
 
 def one_hot_encode_binary_labels(labels):
     one_hot_encoded_labels = np.zeros((len(labels), 2))

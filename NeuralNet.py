@@ -1,15 +1,27 @@
-import numpy as np
 import json
-from metrics import accuracy_score, precision_score, recall_score, f1_score
-from losses import binary_cross_entropy, binary_cross_entropy_elem, binary_cross_entropy_derivative 
-from utils import convert_to_binary_pred
+
+import numpy as np
+
 from DenseLayer import DenseLayer, Layer
+from losses import (binary_crossentropy, binary_crossentropy_derivative,
+                    binary_crossentropy_elem)
+from metrics import accuracy_score, f1_score, precision_score, recall_score
+from utils import convert_to_binary_pred
+
 
 class NeuralNet():
     def __init__(self, optimizer='momentum', momentum=0.9, decay_rate=0.9, nesterov=False):
         self.network = None
-        self.metrics_historic = []
-
+        self.history = {
+            'loss': [],
+            'accuracy': [],
+            'precision': [],
+            'recall': [],
+            'val_loss': [],
+            'val_accuracy': [],
+            'val_precision': [],
+            'val_recall': [],
+        }
         self.optimizer = optimizer
         if self.optimizer != 'momentum':
             self.nesterov = False
@@ -136,11 +148,11 @@ class NeuralNet():
 
         return json_data
 
-    def print_metrics_historic(self):
-        if len(self.metrics_historic) == 0:
+    def print_history(self):
+        if len(self.history) == 0:
             print("It hasn't trained yet.")
             return
-        for metric in self.metrics_historic:
+        for metric in self.history:
             print(f"epoch {metric['epoch']} - loss: {metric['loss']} - val_loss: {metric['val_loss']}")
 
     def create_mini_batches(self, x, y, batch_size):
@@ -183,9 +195,9 @@ class NeuralNet():
 
 
     def fit(self, data_train, data_valid, loss, learning_rate, batch_size, epochs):
-        if loss == 'binary_cross_entropy':
-            loss = binary_cross_entropy
-            loss_prime = binary_cross_entropy_derivative
+        if loss == 'binary_crossentropy':
+            loss = binary_crossentropy
+            loss_prime = binary_crossentropy_derivative
         elif loss == 'mse':
             loss = mse
             loss_prime = mse_derivative
@@ -193,16 +205,6 @@ class NeuralNet():
         lr_decay_factor=0.1
         lr_decay_patience=3
      
-        accuracy_list = []
-        loss_list = []
-
-        val_accuracy_list = []
-        val_precision_list = []
-        val_recall_list = []
-        val_f1_list = []
-        val_loss_list = []
-
-        epoch_list = []
         best_loss = float('inf')
         counter = 0
         alpha = learning_rate
@@ -239,10 +241,7 @@ class NeuralNet():
 
             total_loss /= n_batches
     
-            accuracy = accuracy_score(y_train_batch, binary_predictions)
-            accuracy_list.append(accuracy)
-            loss_list.append(total_loss)
-            epoch_list.append(epoch)
+            accuracy, precision, recall, f1 = self.evaluate_metrics(y_train_batch, binary_predictions)
     
             # Calculate validation loss and accuracy
             val_loss = 0
@@ -264,19 +263,19 @@ class NeuralNet():
             val_loss /= n_val_batches
     
             val_accuracy, val_precision, val_recall, val_f1 = self.evaluate_metrics(y_val_batch, val_binary_predictions)
-            val_accuracy_list.append(val_accuracy)
-            val_precision_list.append(val_precision)
-            val_recall_list.append(val_recall)
-            val_f1_list.append(val_f1)
-            val_loss_list.append(val_loss)
-
-
 
             padding_width = len(str(epochs))
             print(f'epoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f} - val_loss: {val_loss:.4f}, ', end="")
             print(f"Accuracy: {val_accuracy:.2f}%, Precision: {val_precision:.2f}%, Recall: {val_recall:.2f}%, F1 score: {val_f1:.2f}%")
 
-            self.metrics_historic.append({"epoch": f'{epoch + 1:0{padding_width}d}/{epochs}', "loss": f'{total_loss:.4f}', "val_loss": f'{val_loss:.4f}'})
+            self.history['loss'].append(total_loss)
+            self.history['accuracy'].append(accuracy)
+            self.history['precision'].append(precision)
+            self.history['recall'].append(recall)
+            self.history['val_loss'].append(val_loss)
+            self.history['val_accuracy'].append(val_accuracy)
+            self.history['val_precision'].append(val_precision)
+            self.history['val_recall'].append(val_recall)
 
     
             # Check if validation loss is decreasing
@@ -297,10 +296,9 @@ class NeuralNet():
             if counter >= patience:
                 print(f"Early stopping at epoch {epoch}.")
                 break
-    
 
         print('Train accuracy:', accuracy, 'Validation accuracy:', val_accuracy)
-        return epoch_list, accuracy_list, loss_list, val_accuracy_list, val_loss_list
+        return self
 
     def predict(self, data_test):
         x_test = data_test[:, :-2]
