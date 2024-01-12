@@ -58,14 +58,11 @@ Class distribution: 357 benign, 212 malignant
 
 #### Usage
 ``` bash
-usage: multilayer_perceptron.py [-h] [-s SPLIT] [-t] [-p]
-                                [-c [{models,optimizers}]]
+usage: multilayer_perceptron.py [-h] [-s SPLIT] [-t] [-p] [-c [{models,optimizers}]]
 
-This program is an implementation of a Multilayer Perceptron (MLP), a type of
-artificial neural network designed for tasks such as classification,
-regression, and pattern recognition.
+This program is an implementation of a Multilayer Perceptron (MLP), a type of artificial neural network designed for tasks such as classification, regression, and pattern recognition.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -s SPLIT, --split SPLIT
                         Split dataset into train and validation sets.
@@ -74,21 +71,20 @@ optional arguments:
   -c [{models,optimizers}], --compare [{models,optimizers}]
                         Compare models by plotting learning curves.
 ```
-
 ### Training 
 
 #### Neural Network Topology
 ``` python
 input_shape = 30
 output_shape = 2
-loss='binary_cross_entropy', learning_rate=1e-3, batch_size=2, epochs=30
+loss='binary_crossentropy', learning_rate=1e-3, batch_size=2, epochs=30
 
-network = [
+network = model.create_network([
         DenseLayer(input_shape, 20, activation='sigmoid'),
         DenseLayer(20, 10, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(10, 2, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(2, output_shape, activation='softmax', weights_initializer='random')
-        ]
+        DenseLayer(10, 1, activation='sigmoid', weights_initializer='random'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
+        ])
 ```
 #### Training Learning Curves
 
@@ -103,27 +99,27 @@ Train accuracy: 0.9845 Validation accuracy: 0.9912
 ``` python
 input_shape = 30
 output_shape = 2
-loss='binary_cross_entropy', learning_rate=1e-3, batch_size=2, epochs=50
+loss='binary_crossentropy', learning_rate=1e-3, batch_size=2, epochs=50
 
     model1 = NeuralNet()
     model1.create_network([
         DenseLayer(input_shape, 20, activation='sigmoid'),
         DenseLayer(20, 10, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(10, 2, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(2, output_shape, activation='softmax', weights_initializer='random')
+        DenseLayer(10, 1, activation='sigmoid', weights_initializer='random'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
     model2 = NeuralNet()
     model2.create_network([
         DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, 8, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(8, output_shape, activation='softmax', weights_initializer='random')
+        DenseLayer(15, 1, activation='sigmoid', weights_initializer='random'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
     model3 = NeuralNet()
     model3.create_network([
-        DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, output_shape, activation='softmax', weights_initializer='random')
+        DenseLayer(input_shape, 1, activation='sigmoid'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 ```
 
@@ -138,18 +134,20 @@ Model3 - Train accuracy: 0.9801 Validation accuracy: 0.9912
 ``` python
 input_shape = 30
 output_shape = 2
-loss='binary_cross_entropy', learning_rate=1e-3, batch_size='batch', epochs=30
+loss='binary_crossentropy', learning_rate=1e-3, batch_size='batch', epochs=30
 
     model1 = NeuralNet(nesterov=False)
     model1.create_network([
-        DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, output_shape, activation='softmax', weights_initializer='zero')
+        DenseLayer(input_shape, 10, activation='sigmoid'),
+        DenseLayer(10, 1, activation='sigmoid', weights_initializer='zero'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
     model2 = NeuralNet(optimizer='rmsprop')
     model2.create_network([
-        DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, output_shape, activation='softmax', weights_initializer='zero')
+        DenseLayer(input_shape, 10, activation='sigmoid'),
+        DenseLayer(10, 1, activation='sigmoid', weights_initializer='zero'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 ```
 
