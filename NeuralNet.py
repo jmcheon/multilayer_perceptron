@@ -10,8 +10,10 @@ from utils import convert_to_binary_pred
 
 
 class NeuralNet():
-    def __init__(self, optimizer='momentum', momentum=0.9, decay_rate=0.9, nesterov=False):
+    def __init__(self, momentum=0.9, decay_rate=0.9):
         self.network = None
+        self.compiled = False
+        self.momentum = momentum
         self.history = {
             'loss': [],
             'accuracy': [],
@@ -22,12 +24,6 @@ class NeuralNet():
             'val_precision': [],
             'val_recall': [],
         }
-        self.optimizer = optimizer
-        if self.optimizer != 'momentum':
-            self.nesterov = False
-        else:
-            self.nesterov = nesterov
-        self.momentum = momentum
 
         self.decay_rate = decay_rate
         self.epsilon = 1e-8
@@ -193,14 +189,27 @@ class NeuralNet():
         else:
             raise ValueError(f"Invalid optimizer '{self.optimizer}', expected 'momentum', 'rmsprop' or 'adam'.")
 
+    def compile(self, loss, metrics=None, optimizer='momentum', loss_weights=None, weighted_metrics=None, run_eagerly=None, steps_per_execution=1):
+        self.optimizer = optimizer
+        if self.optimizer != 'momentum':
+            self.nesterov = False
+        else:
+            self.nesterov = True 
 
-    def fit(self, data_train, data_valid, loss, learning_rate, batch_size, epochs):
-        if loss == 'binary_crossentropy':
-            loss = binary_crossentropy
-            loss_prime = binary_crossentropy_derivative
+        if not loss:
+            raise ValueError("No loss found. You may have forgotten to provide a `loss` argument in the `compile()` method.")
+        elif loss == 'binary_crossentropy':
+            self.loss = binary_crossentropy
+            self.loss_prime = binary_crossentropy_derivative
         elif loss == 'mse':
-            loss = mse
-            loss_prime = mse_derivative
+            self.loss = mse
+            self.loss_prime = mse_derivative
+        self.compiled = True
+        return
+
+    def fit(self, x_train, y_train, learning_rate, batch_size, epochs, validation_data=None):
+        if self.compiled == False:
+            raise RuntimeError("You must compile your model before training/testing. Use `model.compile(optimizer, loss)")
         patience=5
         lr_decay_factor=0.1
         lr_decay_patience=3
@@ -208,17 +217,15 @@ class NeuralNet():
         best_loss = float('inf')
         counter = 0
         alpha = learning_rate
-    
-        # Unpack data_train into x_train and y_train
-        x_train = data_train[:, :-2]
-        y_train = data_train[:, -2:]
-        
-        # Unpack data_valid into x_val and y_val
-        x_val = data_valid[:, :-2]
-        y_val = data_valid[:, -2:]
-    
+
         print('x_train shape :', x_train.shape)
-        print('x_valid shape :', x_val.shape)
+        if validation_data:
+            if not isinstance(validation_data, tuple):
+                raise TypeError("tuple validation_data is needed.")
+            x_val = validation_data[0]
+            y_val = validation_data[1]
+            print('x_valid shape :', x_val.shape)
+    
         for epoch in range(epochs):
             total_loss = 0
             n_batches = 0
@@ -231,8 +238,8 @@ class NeuralNet():
                 for x_i, y_i in zip(x_batch, y_batch):
                     y_pred = (self.forward(x_i.reshape(1, -1))).T
                     binary_predictions = np.vstack((binary_predictions, convert_to_binary_pred(y_pred)))
-                    grad = loss_prime(y_i, y_pred).T
-                    batch_loss = loss(y_i, y_pred)
+                    grad = self.loss_prime(y_i, y_pred).T
+                    batch_loss = self.loss(y_i, y_pred)
                     grads = self.backward(grad, alpha)
                     self.update_parameters(grads, alpha)
 
@@ -242,48 +249,55 @@ class NeuralNet():
             total_loss /= n_batches
     
             accuracy, precision, recall, f1 = self.evaluate_metrics(y_train_batch, binary_predictions)
-    
-            # Calculate validation loss and accuracy
-            val_loss = 0
-            n_val_batches = 0
-
-            y_val_batch = np.empty((0, y_val.shape[1]))
-            val_binary_predictions = np.empty((0, y_val.shape[1]))
-            for x_batch, y_batch in self.create_mini_batches(x_val, y_val, batch_size):
-                y_val_batch = np.vstack((y_val_batch, y_batch))
-                val_batch_loss = 0
-                for x_val_i, y_val_i in zip(x_batch, y_batch):
-                    y_val_pred = (self.forward(x_val_i.reshape(1, -1))).T
-                    val_batch_loss = loss(y_val_i, y_val_pred)
-                    val_binary_predictions = np.vstack((val_binary_predictions, convert_to_binary_pred(y_val_pred)))
-
-                val_loss += val_batch_loss
-                n_val_batches += 1
-
-            val_loss /= n_val_batches
-    
-            val_accuracy, val_precision, val_recall, val_f1 = self.evaluate_metrics(y_val_batch, val_binary_predictions)
-
-            padding_width = len(str(epochs))
-            print(f'epoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f} - val_loss: {val_loss:.4f}, ', end="")
-            print(f"Accuracy: {val_accuracy:.2f}%, Precision: {val_precision:.2f}%, Recall: {val_recall:.2f}%, F1 score: {val_f1:.2f}%")
-
             self.history['loss'].append(total_loss)
             self.history['accuracy'].append(accuracy)
             self.history['precision'].append(precision)
             self.history['recall'].append(recall)
-            self.history['val_loss'].append(val_loss)
-            self.history['val_accuracy'].append(val_accuracy)
-            self.history['val_precision'].append(val_precision)
-            self.history['val_recall'].append(val_recall)
+    
+            padding_width = len(str(epochs))
+            print(f'epoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f}, ', end="")
+            print(f"accuracy: {accuracy:.2f}%, precision: {precision:.2f}%, eecall: {recall:.2f}%, F1 score: {f1:.2f}%", end="")
+
+            # Calculate validation loss and accuracy
+            if validation_data:
+                val_loss = 0
+                n_val_batches = 0
+
+                y_val_batch = np.empty((0, y_val.shape[1]))
+                val_binary_predictions = np.empty((0, y_val.shape[1]))
+                for x_batch, y_batch in self.create_mini_batches(x_val, y_val, batch_size):
+                    y_val_batch = np.vstack((y_val_batch, y_batch))
+                    val_batch_loss = 0
+                    for x_val_i, y_val_i in zip(x_batch, y_batch):
+                        y_val_pred = (self.forward(x_val_i.reshape(1, -1))).T
+                        val_batch_loss = self.loss(y_val_i, y_val_pred)
+                        val_binary_predictions = np.vstack((val_binary_predictions, convert_to_binary_pred(y_val_pred)))
+
+                    val_loss += val_batch_loss
+                    n_val_batches += 1
+
+                val_loss /= n_val_batches
+    
+                val_accuracy, val_precision, val_recall, val_f1 = self.evaluate_metrics(y_val_batch, val_binary_predictions)
+                # validation history
+                self.history['val_loss'].append(val_loss)
+                self.history['val_accuracy'].append(val_accuracy)
+                self.history['val_precision'].append(val_precision)
+                self.history['val_recall'].append(val_recall)
+                # Check if validation loss is decreasing
+                if val_loss < best_loss:
+                    best_loss = val_loss
+                    counter = 0
+                else:
+                    counter += 1
+
+                print(f' - val_loss: {val_loss:.4f}, ', end="")
+                print(f"val_accuracy: {val_accuracy:.2f}%, val_precision: {val_precision:.2f}%, val_recall: {val_recall:.2f}%, val_F1 score: {val_f1:.2f}%")
+            else:
+                print()
+
 
     
-            # Check if validation loss is decreasing
-            if val_loss < best_loss:
-                best_loss = val_loss
-                counter = 0
-            else:
-                counter += 1
     
             # Learning rate decay
             if counter >= lr_decay_patience:
@@ -292,18 +306,17 @@ class NeuralNet():
                 #counter = 0
                 pass
     
+            '''
             # Stop early if the validation loss hasn't improved for 'patience' epochs
             if counter >= patience:
                 print(f"Early stopping at epoch {epoch}.")
                 break
+            '''
 
-        print('Train accuracy:', accuracy, 'Validation accuracy:', val_accuracy)
+        #print('Train accuracy:', accuracy, 'Validation accuracy:', val_accuracy)
         return self
 
-    def predict(self, data_test):
-        x_test = data_test[:, :-2]
-        y_test = data_test[:, -2:]
-
+    def predict(self, x_test, y_test):
         y_pred = self.forward(x_test).T
         #error = binary_cross_entropy_elem(y_test, y_pred)
         #print('loss:', error[:,0])

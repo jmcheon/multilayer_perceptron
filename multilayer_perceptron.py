@@ -16,7 +16,6 @@ def prediction():
     data_path = 'data_test.csv'
 
     x, y = load_split_data(data_path)
-    data_test = np.hstack((x, y))
 
     try:
         weights = np.load(weights_path, allow_pickle=True)
@@ -34,14 +33,12 @@ def prediction():
     model = NeuralNet()
     model.create_network(config['network_topology'])
     model.set_weights(list(weights))
-    model.predict(data_test)
+    model.predict(x, y)
 
 def train_plot_save():
     x_train, y_train = load_split_data(train_path)
     x_val, y_val = load_split_data(valid_path)
-
-    data_train = np.hstack((x_train, y_train))
-    data_valid = np.hstack((x_val, y_val))
+    print(x_train.shape, y_train.shape)
 
     model = NeuralNet()
     network = model.create_network([
@@ -51,7 +48,14 @@ def train_plot_save():
         DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
-    history = model.fit(data_train, data_valid, loss='binary_crossentropy', learning_rate=1e-3, batch_size=2, epochs=30)
+    model.compile(loss='binary_crossentropy')
+
+    history = model.fit(
+            x_train, y_train, validation_data=(x_val, y_val), 
+            learning_rate=1e-3, 
+            batch_size=2, 
+            epochs=30
+    )
     plot_learning_curves(history)
     model.save_model()
 
@@ -61,41 +65,42 @@ def multiple_models_test():
     x_train, y_train = load_split_data(train_path)
     x_val, y_val = load_split_data(valid_path)
 
-    data_train = np.hstack((x_train, y_train))
-    data_valid = np.hstack((x_val, y_val))
-
     model1 = NeuralNet()
     model1.create_network([
         DenseLayer(input_shape, 20, activation='sigmoid'),
-        DenseLayer(20, 10, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(10, 1, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(20, 10, activation='sigmoid', weights_initializer='zero'),
+        DenseLayer(10, 1, activation='sigmoid', weights_initializer='zero'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
     model2 = NeuralNet()
     model2.create_network([
         DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, 1, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(15, 1, activation='sigmoid', weights_initializer='zero'),
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
     model3 = NeuralNet()
     model3.create_network([
         DenseLayer(input_shape, 1, activation='sigmoid'),
-        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
     model_list = [model1, model2, model3]
-    compare_models(data_train, data_valid, model_list, loss='binary_crossentropy', learning_rate=1e-3, batch_size=2, epochs=50)
+    compare_models(
+            x_train, y_train, validation_data=(x_val, y_val), 
+            model_list=model_list, 
+            loss='binary_crossentropy', 
+            learning_rate=1e-3, 
+            batch_size=2, 
+            epochs=50
+    )
 
 def optimizer_test():
     print("Compare optimizers...")
 
     x_train, y_train = load_split_data(train_path)
     x_val, y_val = load_split_data(valid_path)
-
-    data_train = np.hstack((x_train, y_train))
-    data_valid = np.hstack((x_val, y_val))
 
     model1 = NeuralNet(nesterov=False)
     model1.create_network([
@@ -120,16 +125,20 @@ def optimizer_test():
         ])
 
     model_list = [model1, model3]
-    compare_optimizers(data_train, data_valid, model_list, loss='binary_crossentropy', learning_rate=1e-3, batch_size='batch', epochs=30)
+    compare_optimizers(
+            x_train, y_train, validation_data=(x_val, y_val), 
+            model_list=model_list, 
+            loss='binary_crossentropy', 
+            learning_rate=1e-3, 
+            batch_size='batch', 
+            epochs=30
+    )
 
 def same_model_test():
     print("Compare same models...")
 
     x_train, y_train = load_split_data(train_path)
     x_val, y_val = load_split_data(valid_path)
-
-    data_train = np.hstack((x_train, y_train))
-    data_valid = np.hstack((x_val, y_val))
 
     model1 = NeuralNet()
     model1.create_network([
@@ -150,14 +159,18 @@ def same_model_test():
         ])
 
     model_list = [model1, model2, model3]
-    compare_models(data_train, data_valid, model_list, loss='binary_crossentropy', learning_rate=1e-3, batch_size='batch', epochs=30)
+    compare_models(
+            x_train, y_train, validation_data=(x_val, y_val), 
+            model_list=model_list, 
+            loss='binary_crossentropy', 
+            learning_rate=1e-3, 
+            batch_size='batch', 
+            epochs=30
+    )
 
 def bonus_test(history=False):
     x_train, y_train = load_split_data(train_path)
     x_val, y_val = load_split_data(valid_path)
-
-    data_train = np.hstack((x_train, y_train))
-    data_valid = np.hstack((x_val, y_val))
 
     model = NeuralNet()
     model.create_network([
@@ -165,7 +178,13 @@ def bonus_test(history=False):
         DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
         ])
 
-    model_history = model.fit(data_train, data_valid, loss='binary_crossentropy', learning_rate=1e-2, batch_size=5, epochs=30)
+    model_history = model.fit(
+            x_train, y_train, validation_data=(x_val, y_val), 
+            loss='binary_crossentropy',
+            learning_rate=1e-2,
+            batch_size=5,
+            epochs=30
+    )
     plot_learning_curves(model_history)
     if history == True:
         print("medel's history:\n", model.history)

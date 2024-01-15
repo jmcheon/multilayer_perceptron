@@ -22,12 +22,18 @@ def plot_learning_curves(history):
     plt.tight_layout(pad=5)
     plt.show()
 
-def compare_models(data_train, data_valid, model_list, loss, learning_rate, batch_size, epochs):
+def compare_models(x_train, y_train, model_list, loss, learning_rate, batch_size, epochs, validation_data=None):
     fig, axes = plt.subplots(2, 2, figsize=(20, 15))
     for index, model in enumerate(model_list):
         current_model_index = index + 1
         print(f"\nTraining model #{current_model_index}...")
-        history = model.fit(data_train, data_valid, loss, learning_rate, batch_size, epochs)
+        model.compile(loss=loss)
+        history = model.fit(
+                x_train, y_train, validation_data=validation_data, 
+                learning_rate=learning_rate, 
+                batch_size=batch_size, 
+                epochs=epochs
+        )
         # Plot training and validation accuracy and loss
         for i in range(2):
             ax = axes[0][i]
@@ -60,7 +66,7 @@ def compare_models(data_train, data_valid, model_list, loss, learning_rate, batc
     plt.tight_layout(pad=5)
     plt.show()
 
-def compare_optimizers(data_train, data_valid, model_list, loss, learning_rate, batch_size, epochs):
+def compare_optimizers(x_train, y_train, model_list, loss, learning_rate, batch_size, epochs, validation_data=None):
     fig, axes = plt.subplots(2, 2, figsize=(20, 15))
     for index, model in enumerate(model_list):
         optimizer = model.optimizer
@@ -68,7 +74,13 @@ def compare_optimizers(data_train, data_valid, model_list, loss, learning_rate, 
             optimizer = 'nesterov' 
         current_model_index = index + 1
         print(f"\nTraining model #{current_model_index}...")
-        history = model.fit(data_train, data_valid, loss, learning_rate, batch_size, epochs)
+        model.compile(loss=loss)
+        history = model.fit(
+                x_train, y_train, validation_data=validation_data, 
+                learning_rate=learning_rate, 
+                batch_size=batch_size, 
+                epochs=epochs
+        )
         # Plot training and validation accuracy and loss
         for i in range(2):
             ax = axes[0][i]
