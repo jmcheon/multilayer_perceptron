@@ -2,13 +2,12 @@ import argparse
 import json
 import sys
 
-import h5py
 import numpy as np
 
 import optimizers
 from DenseLayer import DenseLayer
 from NeuralNet import NeuralNet
-from plots import compare_models, compare_optimizers, plot_learning_curves
+from plots import plot_learning_curves, plot_models
 from utils import load_split_data, split_dataset_save
 
 
@@ -41,11 +40,7 @@ def prediction():
     model.set_weights(list(weights))
     model.predict(x, y)
 
-def train_plot_save():
-    x_train, y_train = load_split_data(train_path)
-    x_val, y_val = load_split_data(valid_path)
-    print(x_train.shape, y_train.shape)
-
+def create_model():
     model = NeuralNet()
     network = model.create_network([
         DenseLayer(input_shape, 20, activation='relu'),
@@ -56,9 +51,10 @@ def train_plot_save():
 
     model.compile(
             #optimizer='sgd', 
-            #optimizer=SGD(learning_rate=1e-3),
-            optimizer=optimizers.RMSprop(learning_rate=1e-3),
-            loss='binary_crossentropy'
+            optimizer=optimizers.SGD(learning_rate=1e-3),
+            #optimizer=optimizers.RMSprop(learning_rate=1e-4),
+            loss='binary_crossentropy',
+            metrics=['accuracy', 'Precision', 'Recall'],
     )
     weights = load_weights('saved_tensorflow_weights.npy')
     for i in range(len(weights)):
@@ -66,14 +62,25 @@ def train_plot_save():
     model.set_weights(list(weights))
     #print(model.get_weights())
 
+    return model
+
+def train_model(plot=True, save=True):
+    x_train, y_train = load_split_data(train_path)
+    x_val, y_val = load_split_data(valid_path)
+    print(x_train.shape, y_train.shape)
+
+    model = create_model()
 
     history = model.fit(
             x_train, y_train, validation_data=(x_val, y_val), 
             batch_size=1, 
             epochs=30
     )
-    plot_learning_curves(history)
-    model.save_model()
+    if plot:
+        plot_learning_curves(history)
+    if save:
+        model.save_model()
+    return model
 
 def multiple_models_test():
     print("Compare multiple models...")
@@ -87,27 +94,33 @@ def multiple_models_test():
         DenseLayer(20, 10, activation='relu', weights_initializer='random'),
         DenseLayer(10, 5, activation='relu', weights_initializer='random'),
         DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
-        ])
+        ], name="model1")
 
     model2 = NeuralNet()
     model2.create_network([
         DenseLayer(input_shape, 15, activation='relu'),
         DenseLayer(15, 5, activation='relu', weights_initializer='random'),
         DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
-        ])
+        ], name="model2")
 
     model3 = NeuralNet()
     model3.create_network([
         DenseLayer(input_shape, 5, activation='relu'),
         DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
-        ])
+        ], name="model3")
 
-    model_list = [model1, model2, model3]
-    compare_models(
+    model_list = [
+            (model1, optimizers.SGD(learning_rate=1e-4)), 
+            (model2, optimizers.SGD(learning_rate=1e-4)),
+            (model3, optimizers.SGD(learning_rate=1e-4)),
+    ]
+    #model_list = [model1, model2, model3]
+    plot_models(
             x_train, y_train, validation_data=(x_val, y_val), 
-            optimizer=SGD(learning_rate=1e-3),
+            #optimizer=optimizers.SGD(learning_rate=1e-3),
             model_list=model_list, 
             loss='binary_crossentropy', 
+            metrics=['accuracy', 'Precision', 'Recall'],
             batch_size=1, 
             epochs=50
     )
@@ -147,7 +160,6 @@ def optimizer_test():
             (model2, optimizers.RMSprop(learning_rate=1e-4)),
             (model3, optimizers.Adam(learning_rate=1e-4)),
     ]
-    print(model_list[1])
 
     weights = load_weights('saved_tensorflow_weights.npy')
     for i in range(len(weights)):
@@ -155,9 +167,10 @@ def optimizer_test():
     for (model, optimizer) in model_list:
         model.set_weights(list(weights))
 
-    compare_optimizers(
+    plot_models(
             x_train, y_train, validation_data=(x_val, y_val), 
             model_list=model_list, 
+            metrics=['accuracy', 'Precision', 'Recall'],
             loss='binary_crossentropy', 
             batch_size=1, 
             epochs=30
@@ -187,12 +200,16 @@ def same_model_test():
         DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
-    model_list = [model1, model2, model3]
-    compare_models(
+    model_list = [
+            (model1, optimizers.SGD(learning_rate=1e-3)), 
+            (model2, optimizers.SGD(learning_rate=1e-3)),
+            (model3, optimizers.SGD(learning_rate=1e-3)),
+    ]
+    plot_models(
             x_train, y_train, validation_data=(x_val, y_val), 
-            optimizer=optimizers.SGD(learning_rate=1e-3),
             model_list=model_list, 
             loss='binary_crossentropy', 
+            metrics=['accuracy', 'Precision', 'Recall'],
             batch_size='batch', 
             epochs=30
     )
@@ -250,14 +267,14 @@ if __name__ == "__main__":
     if args.split:
         split_dataset_save(args.split, train_path, valid_path, train_size=0.8, random_state=42)
     elif args.train:
-        train_plot_save()
+        train_model()
     elif args.predict:
         prediction()
     elif args.compare == "models":
         multiple_models_test()
     elif args.compare == "optimizers":
         optimizer_test()
-    elif args.compare == "same models":
+    elif args.compare == "same":
         same_model_test()
     elif args.compare == "early stopping":
         bonus_test()
