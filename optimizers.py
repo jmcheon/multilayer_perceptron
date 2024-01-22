@@ -51,7 +51,7 @@ class Optimizer:
             raise ValueError(f"Invalid optimizer '{self.optimizer}', expected 'momentum', 'rmsprop' or 'adam'.")
 
 class SGD(Optimizer):
-    def __init__(self, learning_rate=1e-3, decay=0., momentum=0., name='SGD'):
+    def __init__(self, learning_rate=0.01, decay=0., momentum=0., name='SGD'):
         super().__init__(learning_rate, decay, momentum)
         '''
         self.learning_rate = learning_rate

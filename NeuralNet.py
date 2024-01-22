@@ -6,7 +6,7 @@ from DenseLayer import DenseLayer, Layer
 from losses import (binary_crossentropy, binary_crossentropy_derivative,
                     binary_crossentropy_elem)
 from metrics import accuracy_score, f1_score, precision_score, recall_score
-from optimizers import SGD
+from optimizers import SGD, Optimizer
 from utils import convert_to_binary_pred
 
 
@@ -191,7 +191,9 @@ class NeuralNet():
                 steps_per_execution=1
         ):
 
-        if optimizer == 'sgd':
+        if isinstance(optimizer, Optimizer):
+            self.optimizer = optimizer
+        elif optimizer == 'sgd':
             self.optimizer = SGD()
 
         if not loss:
@@ -205,7 +207,7 @@ class NeuralNet():
         self.compiled = True
         return
 
-    def fit(self, x_train, y_train, learning_rate, batch_size, epochs, validation_data=None):
+    def fit(self, x_train, y_train, batch_size, epochs, validation_data=None):
         if self.compiled == False:
             raise RuntimeError("You must compile your model before training/testing. Use `model.compile(optimizer, loss)")
         patience=5
@@ -214,7 +216,6 @@ class NeuralNet():
      
         best_loss = float('inf')
         counter = 0
-        alpha = learning_rate
 
         print('x_train shape :', x_train.shape)
         print('y_train shape :', y_train.shape)
@@ -288,16 +289,7 @@ class NeuralNet():
                 print(f"val_accuracy: {val_accuracy:.2f}%, val_precision: {val_precision:.2f}%, val_recall: {val_recall:.2f}%, val_F1 score: {val_f1:.2f}%")
             else:
                 print()
-
-
     
-    
-            # Learning rate decay
-            if counter >= lr_decay_patience:
-                #alpha *= lr_decay_factor
-                #print(f"Learning rate decayed to {alpha}.")
-                #counter = 0
-                pass
     
             '''
             # Stop early if the validation loss hasn't improved for 'patience' epochs

@@ -22,15 +22,23 @@ def plot_learning_curves(history):
     plt.tight_layout(pad=5)
     plt.show()
 
-def compare_models(x_train, y_train, model_list, loss, learning_rate, batch_size, epochs, validation_data=None):
+def compare_models(
+        x_train, 
+        y_train, 
+        optimizer,
+        model_list, 
+        loss, 
+        batch_size, 
+        epochs, 
+        validation_data=None
+    ):
     fig, axes = plt.subplots(2, 2, figsize=(20, 15))
     for index, model in enumerate(model_list):
         current_model_index = index + 1
         print(f"\nTraining model #{current_model_index}...")
-        model.compile(loss=loss)
+        model.compile(optimizer=optimizer, loss=loss)
         history = model.fit(
                 x_train, y_train, validation_data=validation_data, 
-                learning_rate=learning_rate, 
                 batch_size=batch_size, 
                 epochs=epochs
         )

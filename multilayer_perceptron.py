@@ -55,7 +55,8 @@ def train_plot_save():
         ])
 
     model.compile(
-            optimizer='sgd', 
+            #optimizer='sgd', 
+            optimizer=SGD(learning_rate=1e-3),
             loss='binary_crossentropy'
     )
     weights = load_weights('saved_tensorflow_weights.npy')
@@ -67,7 +68,6 @@ def train_plot_save():
 
     history = model.fit(
             x_train, y_train, validation_data=(x_val, y_val), 
-            learning_rate=1e-3, 
             batch_size=1, 
             epochs=30
     )
@@ -82,31 +82,31 @@ def multiple_models_test():
 
     model1 = NeuralNet()
     model1.create_network([
-        DenseLayer(input_shape, 20, activation='sigmoid'),
-        DenseLayer(20, 10, activation='sigmoid', weights_initializer='zero'),
-        DenseLayer(10, 1, activation='sigmoid', weights_initializer='zero'),
-        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
+        DenseLayer(input_shape, 20, activation='relu'),
+        DenseLayer(20, 10, activation='relu', weights_initializer='random'),
+        DenseLayer(10, 5, activation='relu', weights_initializer='random'),
+        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
     model2 = NeuralNet()
     model2.create_network([
-        DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, 1, activation='sigmoid', weights_initializer='zero'),
-        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
+        DenseLayer(input_shape, 15, activation='relu'),
+        DenseLayer(15, 5, activation='relu', weights_initializer='random'),
+        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
     model3 = NeuralNet()
     model3.create_network([
-        DenseLayer(input_shape, 1, activation='sigmoid'),
-        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
+        DenseLayer(input_shape, 5, activation='relu'),
+        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
     model_list = [model1, model2, model3]
     compare_models(
             x_train, y_train, validation_data=(x_val, y_val), 
+            optimizer=SGD(learning_rate=1e-3),
             model_list=model_list, 
             loss='binary_crossentropy', 
-            learning_rate=1e-3, 
             batch_size=2, 
             epochs=50
     )
