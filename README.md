@@ -76,21 +76,21 @@ options:
 #### Neural Network Topology
 ``` python
 input_shape = 30
-output_shape = 2
-loss='binary_crossentropy', learning_rate=1e-3, batch_size=2, epochs=30
+output_shape = 1
+loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=30
 
 network = model.create_network([
-        DenseLayer(input_shape, 20, activation='sigmoid'),
-        DenseLayer(20, 10, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(10, 1, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(input_shape, 20, activation='relu'),
+        DenseLayer(20, 10, activation='relu', weights_initializer='random'),
+        DenseLayer(10, 5, activation='relu', weights_initializer='random'),
+        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 ```
 #### Training Learning Curves
 
 | loss, accuracy for training and validation|
 |---------------------------------------------|
-|![learning_curves](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/b30945e9-3bed-4422-a265-62df8b109247)|
+|![learning_curves](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/36faa30e-57ea-4043-80f6-b66ad092fe1e)|
 Train accuracy: 0.9845 Validation accuracy: 0.9912
 
 ---
@@ -98,61 +98,61 @@ Train accuracy: 0.9845 Validation accuracy: 0.9912
 
 ``` python
 input_shape = 30
-output_shape = 2
-loss='binary_crossentropy', learning_rate=1e-3, batch_size=2, epochs=50
+output_shape = 1
+loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=50
 
     model1 = NeuralNet()
     model1.create_network([
-        DenseLayer(input_shape, 20, activation='sigmoid'),
-        DenseLayer(20, 10, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(10, 1, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(input_shape, 20, activation='relu'),
+        DenseLayer(20, 10, activation='relu', weights_initializer='random'),
+        DenseLayer(10, 5, activation='relu', weights_initializer='random'),
+        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
     model2 = NeuralNet()
     model2.create_network([
-        DenseLayer(input_shape, 15, activation='sigmoid'),
-        DenseLayer(15, 1, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(input_shape, 15, activation='relu'),
+        DenseLayer(15, 5, activation='relu', weights_initializer='random'),
+        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
     model3 = NeuralNet()
     model3.create_network([
-        DenseLayer(input_shape, 1, activation='sigmoid'),
-        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(input_shape, 5, activation='relu'),
+        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 ```
 
 
 | models |
 |---------------------------------------------|
-|![models](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/158914d6-d7f2-4fb3-a5ae-459ffc195456)|
+|![models](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/71250a5d-7f3a-44fa-95a4-d04f2b450d14)|
 Model1 - Train accuracy: 0.9867 Validation accuracy: 0.9912
 Model2 - Train accuracy: 0.9823 Validation accuracy: 0.9912
 Model3 - Train accuracy: 0.9801 Validation accuracy: 0.9912
-### Optimizers - RMSprop
+### Optimizers - SGD, RMSprop, Adam
 ``` python
 input_shape = 30
-output_shape = 2
-loss='binary_crossentropy', learning_rate=1e-3, batch_size='batch', epochs=30
+output_shape = 1
+loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=30
 
-    model1 = NeuralNet(nesterov=False)
-    model1.create_network([
-        DenseLayer(input_shape, 10, activation='sigmoid'),
-        DenseLayer(10, 1, activation='sigmoid', weights_initializer='zero'),
-        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
+    model = NeuralNet()
+    model.create_network([
+        DenseLayer(input_shape, 20, activation='relu'),
+        DenseLayer(20, 10, activation='relu', weights_initializer='random'),
+        DenseLayer(10, 5, activation='relu', weights_initializer='random'),
+        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
         ])
-
-    model2 = NeuralNet(optimizer='rmsprop')
-    model2.create_network([
-        DenseLayer(input_shape, 10, activation='sigmoid'),
-        DenseLayer(10, 1, activation='sigmoid', weights_initializer='zero'),
-        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='zero')
-        ])
+        
+ model_list = [                                                                                         
+             (model1, optimizers.SGD(learning_rate=1e-3)),                                                  
+             (model2, optimizers.RMSprop(learning_rate=1e-3)),                                              
+             (model3, optimizers.Adam(learning_rate=1e-3)),                                                 
+] 
 ```
 
 | optimizers |
 |---------------------------------------------|
-|![optimizers](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/3844a386-720d-4b3c-8a8d-6c6b03ef39ce)|
+|![optimizers](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/c1a78d9d-1e9f-431a-b560-ee880e751350)|
 Model1 - Train accuracy: 0.9824 Validation accuracy: 0.9912
 Model2 - Train accuracy: 0.9758 Validation accuracy: 0.9912
