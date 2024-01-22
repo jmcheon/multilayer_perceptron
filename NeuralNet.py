@@ -2,11 +2,11 @@ import json
 
 import numpy as np
 
+import optimizers
 from DenseLayer import DenseLayer, Layer
 from losses import (binary_crossentropy, binary_crossentropy_derivative,
                     binary_crossentropy_elem)
 from metrics import accuracy_score, f1_score, precision_score, recall_score
-from optimizers import SGD, Optimizer
 from utils import convert_to_binary_pred
 
 
@@ -191,10 +191,10 @@ class NeuralNet():
                 steps_per_execution=1
         ):
 
-        if isinstance(optimizer, Optimizer):
+        if isinstance(optimizer, optimizers.Optimizer):
             self.optimizer = optimizer
         elif optimizer == 'sgd':
-            self.optimizer = SGD()
+            self.optimizer = optimizers.SGD()
 
         if not loss:
             raise ValueError("No loss found. You may have forgotten to provide a `loss` argument in the `compile()` method.")
