@@ -6,14 +6,15 @@ from DenseLayer import DenseLayer, Layer
 from losses import (binary_crossentropy, binary_crossentropy_derivative,
                     binary_crossentropy_elem)
 from metrics import accuracy_score, f1_score, precision_score, recall_score
+from optimizers import SGD
 from utils import convert_to_binary_pred
 
 
 class NeuralNet():
-    def __init__(self, momentum=0.9, decay_rate=0.9):
+    def __init__(self):
         self.network = None
         self.compiled = False
-        self.momentum = momentum
+        self.optimizer = None
         self.history = {
             'loss': [],
             'accuracy': [],
@@ -25,7 +26,6 @@ class NeuralNet():
             'val_recall': [],
         }
 
-        self.decay_rate = decay_rate
         self.epsilon = 1e-8
 
         self.params = {}
@@ -73,8 +73,7 @@ class NeuralNet():
 
 
     def forward(self, input_data):
-        input_data = self.network[0].forward(input_data.T)
-        for layer in self.network[1:]:
+        for layer in self.network:
             input_data = layer.forward(input_data)
         return input_data
 
@@ -96,6 +95,18 @@ class NeuralNet():
         # Return the aggregated gradients
         return grads
 
+    def backprop(self, y_true, y_pred):
+        grad = self.loss_prime(y_true, y_pred)
+
+        self.optimizer.pre_update_params()
+        total_layers = len(self.network)
+        for index, layer in enumerate(reversed(self.network)):
+            layer_num = total_layers - index - 2
+            layer.set_activation_gradient(grad)
+            grad = np.dot(layer.deltas, layer.weights.T)
+            self.optimizer.update_params(layer, self.network[layer_num].outputs.T)
+        self.optimizer.post_update_params()
+
     def get_weights(self):
         weights_and_biases = []
         for layer in self.network:
@@ -112,7 +123,7 @@ class NeuralNet():
 
         for index, layer in zip(range(0, len(initial_weights), 2), self.network):
             if isinstance(layer, DenseLayer):
-                layer.set_weights(initial_weights[index], initial_weights[index + 1].reshape(-1, 1))
+                layer.set_weights(initial_weights[index], initial_weights[index + 1])
 
     def get_network_topology(self):
         layers = []
@@ -170,31 +181,18 @@ class NeuralNet():
 
         return accuracy, precision, recall, f1
 
-    def update_parameters(self, grads, learning_rate):
-        if self.optimizer == 'momentum':
-            for param_name in self.params:
-                if self.nesterov:
-                    look_ahead_grad = self.params[param_name] + self.momentum * self.velocity[param_name]
-                    self.velocity[param_name] = self.momentum * self.velocity[param_name] - learning_rate * grads[param_name]
-                    self.params[param_name] = look_ahead_grad - learning_rate * self.velocity[param_name]
-                else:
-                    self.velocity[param_name] = self.momentum * self.velocity[param_name] - learning_rate * grads[param_name]
-                    self.params[param_name] += self.velocity[param_name]
-        
-        elif self.optimizer == 'rmsprop':
-            for param_name in self.params:
-                self.velocity[param_name] = self.decay_rate * self.velocity[param_name] + (1 - self.decay_rate) * grads[param_name]**2
-                self.params[param_name] -= learning_rate * grads[param_name] / (np.sqrt(self.velocity[param_name]) + self.epsilon)
-        
-        else:
-            raise ValueError(f"Invalid optimizer '{self.optimizer}', expected 'momentum', 'rmsprop' or 'adam'.")
+    def compile(self, 
+                loss, 
+                metrics=None, 
+                optimizer='sgd', 
+                loss_weights=None, 
+                weighted_metrics=None, 
+                run_eagerly=None, 
+                steps_per_execution=1
+        ):
 
-    def compile(self, loss, metrics=None, optimizer='momentum', loss_weights=None, weighted_metrics=None, run_eagerly=None, steps_per_execution=1):
-        self.optimizer = optimizer
-        if self.optimizer != 'momentum':
-            self.nesterov = False
-        else:
-            self.nesterov = True 
+        if optimizer == 'sgd':
+            self.optimizer = SGD()
 
         if not loss:
             raise ValueError("No loss found. You may have forgotten to provide a `loss` argument in the `compile()` method.")
@@ -219,6 +217,7 @@ class NeuralNet():
         alpha = learning_rate
 
         print('x_train shape :', x_train.shape)
+        print('y_train shape :', y_train.shape)
         if validation_data:
             if not isinstance(validation_data, tuple):
                 raise TypeError("tuple validation_data is needed.")
@@ -233,17 +232,14 @@ class NeuralNet():
             y_train_batch = np.empty((0, y_train.shape[1]))
             binary_predictions = np.empty((0, y_train.shape[1]))
             for x_batch, y_batch in self.create_mini_batches(x_train, y_train, batch_size):
-                y_train_batch = np.vstack((y_train_batch, y_batch))
-                batch_loss = 0
-                for x_i, y_i in zip(x_batch, y_batch):
-                    y_pred = (self.forward(x_i.reshape(1, -1))).T
-                    binary_predictions = np.vstack((binary_predictions, convert_to_binary_pred(y_pred)))
-                    grad = self.loss_prime(y_i, y_pred).T
-                    batch_loss = self.loss(y_i, y_pred)
-                    grads = self.backward(grad, alpha)
-                    self.update_parameters(grads, alpha)
+                y_pred = self.forward(x_batch)
 
-                total_loss += batch_loss
+                y_train_batch = np.vstack((y_train_batch, y_batch))
+                binary_predictions = np.vstack((binary_predictions, convert_to_binary_pred(y_pred)))
+
+                total_loss += self.loss(y_batch, y_pred)
+                self.backprop(y_batch, y_pred)
+
                 n_batches += 1
 
             total_loss /= n_batches
@@ -256,7 +252,7 @@ class NeuralNet():
     
             padding_width = len(str(epochs))
             print(f'epoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f}, ', end="")
-            print(f"accuracy: {accuracy:.2f}%, precision: {precision:.2f}%, eecall: {recall:.2f}%, F1 score: {f1:.2f}%", end="")
+            print(f"accuracy: {accuracy:.2f}%, precision: {precision:.2f}%, recall: {recall:.2f}%, F1 score: {f1:.2f}%", end="")
 
             # Calculate validation loss and accuracy
             if validation_data:
@@ -266,14 +262,11 @@ class NeuralNet():
                 y_val_batch = np.empty((0, y_val.shape[1]))
                 val_binary_predictions = np.empty((0, y_val.shape[1]))
                 for x_batch, y_batch in self.create_mini_batches(x_val, y_val, batch_size):
-                    y_val_batch = np.vstack((y_val_batch, y_batch))
-                    val_batch_loss = 0
-                    for x_val_i, y_val_i in zip(x_batch, y_batch):
-                        y_val_pred = (self.forward(x_val_i.reshape(1, -1))).T
-                        val_batch_loss = self.loss(y_val_i, y_val_pred)
-                        val_binary_predictions = np.vstack((val_binary_predictions, convert_to_binary_pred(y_val_pred)))
+                    y_val_pred = self.forward(x_batch)
 
-                    val_loss += val_batch_loss
+                    y_val_batch = np.vstack((y_val_batch, y_batch))
+                    val_binary_predictions = np.vstack((val_binary_predictions, convert_to_binary_pred(y_val_pred)))
+                    val_loss += self.loss(y_batch, y_val_pred)
                     n_val_batches += 1
 
                 val_loss /= n_val_batches
@@ -317,7 +310,7 @@ class NeuralNet():
         return self
 
     def predict(self, x_test, y_test):
-        y_pred = self.forward(x_test).T
+        y_pred = self.forward(x_test)
         #error = binary_cross_entropy_elem(y_test, y_pred)
         #print('loss:', error[:,0])
         accuracy = accuracy_score(y_test, convert_to_binary_pred(y_pred))

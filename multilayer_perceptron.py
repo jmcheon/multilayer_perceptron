@@ -2,13 +2,23 @@ import argparse
 import json
 import sys
 
+import h5py
 import numpy as np
 
 from DenseLayer import DenseLayer
 from NeuralNet import NeuralNet
+from optimizers import SGD
 from plots import compare_models, compare_optimizers, plot_learning_curves
 from utils import load_split_data, split_dataset_save
 
+
+def load_weights(filename):
+    try:
+        weights = np.load(filename, allow_pickle=True)
+    except:
+        print(f"Input file errer: {filename} doesn't exist.")
+        sys.exit()
+    return weights
 
 def prediction():
     weights_path = 'saved_model_weights.npy'
@@ -17,11 +27,7 @@ def prediction():
 
     x, y = load_split_data(data_path)
 
-    try:
-        weights = np.load(weights_path, allow_pickle=True)
-    except:
-        print(f"Input file errer: {weights_path} doesn't exist.")
-        sys.exit()
+    weights = load_weights(weights_path)
     try:
         with open(config_path, 'r') as file:
             json_config = json.load(file)
@@ -42,18 +48,27 @@ def train_plot_save():
 
     model = NeuralNet()
     network = model.create_network([
-        DenseLayer(input_shape, 20, activation='sigmoid'),
-        DenseLayer(20, 10, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(10, 1, activation='sigmoid', weights_initializer='random'),
-        DenseLayer(1, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(input_shape, 20, activation='relu'),
+        DenseLayer(20, 10, activation='relu', weights_initializer='random'),
+        DenseLayer(10, 5, activation='relu', weights_initializer='random'),
+        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
         ])
 
-    model.compile(loss='binary_crossentropy')
+    model.compile(
+            optimizer='sgd', 
+            loss='binary_crossentropy'
+    )
+    weights = load_weights('saved_tensorflow_weights.npy')
+    for i in range(len(weights)):
+        print('weights shape:', weights[i].shape)
+    model.set_weights(list(weights))
+    #print(model.get_weights())
+
 
     history = model.fit(
             x_train, y_train, validation_data=(x_val, y_val), 
             learning_rate=1e-3, 
-            batch_size=2, 
+            batch_size=1, 
             epochs=30
     )
     plot_learning_curves(history)
@@ -194,7 +209,7 @@ if __name__ == "__main__":
     valid_path = "data_valid.csv"
 
     input_shape = 30
-    output_shape = 2
+    output_shape = 1
 
     try:
         with open('description.txt', 'r') as file:

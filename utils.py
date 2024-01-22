@@ -90,6 +90,7 @@ def load_split_data(filename):
     # Normalize the data
     scaler = StandardScaler()
     x = scaler.fit_transform(x)
-    y = one_hot_encode_binary_labels(y)
+    #y = one_hot_encode_binary_labels(y)
+    y = y.reshape(-1, 1)
 
     return x, y

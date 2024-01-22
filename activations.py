@@ -10,3 +10,11 @@ def sigmoid(x):
 def softmax(x):
     exp_x = np.exp(x - np.max(x, axis=0, keepdims=True))
     return exp_x / np.sum(exp_x, axis=0, keepdims=True)
+
+def sigmoid_derivative(outputs, gradient):
+    return gradient * (1 - outputs) * outputs
+
+
+def relu_derivative(inputs, gradient):
+    gradient[inputs <= 0] = 0
+    return gradient
