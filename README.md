@@ -81,9 +81,9 @@ loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=30
 
 network = model.create_network([
         DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu', weights_initializer='random'),
-        DenseLayer(10, 5, activation='relu', weights_initializer='random'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(20, 10, activation='relu'),
+        DenseLayer(10, 5, activation='relu'),
+        DenseLayer(5, output_shape, activation='sigmoid')
         ])
 ```
 #### Training Learning Curves
@@ -104,22 +104,22 @@ loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=50
     model1 = NeuralNet()
     model1.create_network([
         DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu', weights_initializer='random'),
-        DenseLayer(10, 5, activation='relu', weights_initializer='random'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(20, 10, activation='relu'),
+        DenseLayer(10, 5, activation='relu'),
+        DenseLayer(5, output_shape, activation='sigmoid')
         ])
 
     model2 = NeuralNet()
     model2.create_network([
         DenseLayer(input_shape, 15, activation='relu'),
-        DenseLayer(15, 5, activation='relu', weights_initializer='random'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(15, 5, activation='relu'),
+        DenseLayer(5, output_shape, activation='sigmoid')
         ])
 
     model3 = NeuralNet()
     model3.create_network([
         DenseLayer(input_shape, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(5, output_shape, activation='sigmoid')
         ])
 ```
 
@@ -139,9 +139,9 @@ loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=30
     model = NeuralNet()
     model.create_network([
         DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu', weights_initializer='random'),
-        DenseLayer(10, 5, activation='relu', weights_initializer='random'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(20, 10, activation='relu'),
+        DenseLayer(10, 5, activation='relu'),
+        DenseLayer(5, output_shape, activation='sigmoid')
         ])
         
  model_list = [                                                                                         
