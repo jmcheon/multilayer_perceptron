@@ -2,12 +2,14 @@ import json
 
 import numpy as np
 
-import optimizers
-from layers import Dense, Layer
-from losses import (binary_crossentropy, binary_crossentropy_derivative,
-                    binary_crossentropy_elem)
-from metrics import accuracy_score, f1_score, precision_score, recall_score
-from utils import convert_to_binary_pred
+import config
+import srcs.optimizers as optimizers
+from srcs.layers import Dense, Layer
+from srcs.losses import (binary_crossentropy, binary_crossentropy_derivative,
+                         binary_crossentropy_elem)
+from srcs.metrics import (accuracy_score, f1_score, precision_score,
+                          recall_score)
+from srcs.utils import convert_to_binary_pred
 
 
 class NeuralNet():
@@ -45,14 +47,14 @@ class NeuralNet():
     def save_model(self):
         # Save model configuration as a JSON file
         model_config = self.to_json()
-        with open('./saved_model_config.json', 'w') as json_file:
+        with open(config.data_dir + config.config_path, 'w') as json_file:
             json.dump(model_config, json_file)
-            print("> Saving model configuration to './saved_model_config.json'")
+            print(f"> Saving model configuration to '{config.data_dir + config.config_path}'")
         
         # Save model weights as a .npy file
         model_weights = self.get_weights()
-        np.save('./saved_model_weights.npy', model_weights)
-        print("> Saving model weights to './saved_model_weights.npy'")
+        np.save(config.data_dir + config.weights_path, model_weights)
+        print(f"> Saving model weights to '{config.data_dir + config.weights_path}'")
 
 
     def forward(self, input_data):

@@ -4,11 +4,12 @@ import sys
 
 import numpy as np
 
-import optimizers
-from layers import Dense
+import config
+import srcs.optimizers as optimizers
 from NeuralNet import NeuralNet
-from plots import plot_learning_curves, plot_models
-from utils import load_split_data, split_dataset_save
+from srcs.layers import Dense
+from srcs.plots import plot_learning_curves, plot_models
+from srcs.utils import load_split_data, split_dataset_save
 
 
 def load_weights(filename):
@@ -20,23 +21,23 @@ def load_weights(filename):
     return weights
 
 def prediction():
-    weights_path = 'saved_model_weights.npy'
-    config_path = 'saved_model_config.json'
-    data_path = 'data_test.csv'
+    weights_path = config.data_dir + config.weights_path
+    config_path = config.data_dir + config.config_path
+    test_path = config.data_dir + config.test_path
 
-    x, y = load_split_data(data_path)
+    x, y = load_split_data(test_path)
 
     weights = load_weights(weights_path)
     try:
         with open(config_path, 'r') as file:
             json_config = json.load(file)
-        config = json.loads(json_config)
+        config_data = json.loads(json_config)
     except:
         print(f"Input file errer: {config_path} doesn't exist.")
         sys.exit()
 
     model = NeuralNet()
-    model.create_network(config['network_topology'])
+    model.create_network(config_data['network_topology'])
     model.set_weights(list(weights))
     model.predict(x, y)
 
@@ -238,8 +239,8 @@ def bonus_test(history=False):
         print("medel's history:\n", model.history)
 
 if __name__ == "__main__":
-    train_path = "data_train.csv"
-    valid_path = "data_valid.csv"
+    train_path = config.data_dir + config.train_path 
+    valid_path = config.data_dir + config.valid_path
 
     input_shape = 30
     output_shape = 1

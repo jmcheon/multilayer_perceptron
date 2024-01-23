@@ -1,7 +1,7 @@
 import numpy as np
 
-import activations
-import initializers
+import srcs.activations as activations
+import srcs.initializers as initializers
 
 
 class Layer:
