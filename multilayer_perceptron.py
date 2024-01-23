@@ -5,7 +5,7 @@ import sys
 import numpy as np
 
 import optimizers
-from DenseLayer import DenseLayer
+from layers import Dense
 from NeuralNet import NeuralNet
 from plots import plot_learning_curves, plot_models
 from utils import load_split_data, split_dataset_save
@@ -43,10 +43,10 @@ def prediction():
 def create_model(input_shape, output_shape):
     model = NeuralNet()
     network = model.create_network([
-        DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu'),
-        DenseLayer(10, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid')
+        Dense(input_shape, 20, activation='relu'),
+        Dense(20, 10, activation='relu'),
+        Dense(10, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid')
         ])
 
     model.compile(
@@ -55,11 +55,13 @@ def create_model(input_shape, output_shape):
             loss='binary_crossentropy',
             metrics=['accuracy', 'Precision', 'Recall'],
     )
+    '''
     weights = load_weights('saved_tensorflow_weights.npy')
     for i in range(len(weights)):
         print('weights shape:', weights[i].shape)
-    #model.set_weights(list(weights))
+    model.set_weights(list(weights))
     #print(model.get_weights())
+    '''
 
     return model
 
@@ -90,23 +92,23 @@ def multiple_models_test():
 
     model1 = NeuralNet()
     model1.create_network([
-        DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu'),
-        DenseLayer(10, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid'),
+        Dense(input_shape, 20, activation='relu'),
+        Dense(20, 10, activation='relu'),
+        Dense(10, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid'),
         ], name="model1")
 
     model2 = NeuralNet()
     model2.create_network([
-        DenseLayer(input_shape, 15, activation='relu'),
-        DenseLayer(15, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid'),
+        Dense(input_shape, 15, activation='relu'),
+        Dense(15, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid'),
         ], name="model2")
 
     model3 = NeuralNet()
     model3.create_network([
-        DenseLayer(input_shape, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid'),
+        Dense(input_shape, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid'),
         ], name="model3")
 
     model_list = [
@@ -133,26 +135,26 @@ def optimizer_test():
 
     model1 = NeuralNet()
     model1.create_network([
-        DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu'),
-        DenseLayer(10, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid'),
+        Dense(input_shape, 20, activation='relu'),
+        Dense(20, 10, activation='relu'),
+        Dense(10, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid'),
         ])
 
     model2 = NeuralNet()
     model2.create_network([
-        DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu'),
-        DenseLayer(10, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid'),
+        Dense(input_shape, 20, activation='relu'),
+        Dense(20, 10, activation='relu'),
+        Dense(10, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid'),
         ])
 
     model3 = NeuralNet()
     model3.create_network([
-        DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu'),
-        DenseLayer(10, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid'),
+        Dense(input_shape, 20, activation='relu'),
+        Dense(20, 10, activation='relu'),
+        Dense(10, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid'),
         ])
 
     model_list = [
@@ -184,20 +186,20 @@ def same_model_test():
 
     model1 = NeuralNet()
     model1.create_network([
-        DenseLayer(input_shape, 5, activation='relu', weights_initializer='random'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        Dense(input_shape, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid'),
         ])
 
     model2 = NeuralNet()
     model2.create_network([
-        DenseLayer(input_shape, 5, activation='relu', weights_initializer='random'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        Dense(input_shape, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid'),
         ])
 
     model3 = NeuralNet()
     model3.create_network([
-        DenseLayer(input_shape, 5, activation='relu', weights_initializer='random'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        Dense(input_shape, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid'),
         ])
 
     model_list = [
@@ -220,8 +222,8 @@ def bonus_test(history=False):
 
     model = NeuralNet()
     model.create_network([
-        DenseLayer(input_shape, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        Dense(input_shape, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid')
         ])
 
     model_history = model.fit(

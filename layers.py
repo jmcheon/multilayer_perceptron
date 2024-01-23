@@ -55,7 +55,7 @@ class Layer:
     def backward(self, output_gradient, alpha):
         pass
 
-class DenseLayer(Layer):
+class Dense(Layer):
     def __init__(self, 
                  input_shape, 
                  output_shape, 
@@ -65,7 +65,7 @@ class DenseLayer(Layer):
         ):
         super().__init__(input_shape, output_shape, activation, weights_initializer, bias_initializer)
         self.deltas = None
-        print(self.bias.shape)
+        #print(self.bias.shape)
 
 
     def set_weights(self, weights, bias):
@@ -84,16 +84,3 @@ class DenseLayer(Layer):
         self.z = z
         self.outputs = self.activation(z)
         return self.outputs
-
-    def backward(self, output_gradient, alpha):
-        activation_gradient = (self.activation(self.z) * (1 - self.activation(self.z)))
-
-        weights_gradient = np.dot(output_gradient * activation_gradient, self.input_data.T)
-        bias_gradient = output_gradient * activation_gradient
-
-        input_gradient = np.dot(self.weights.T, output_gradient * activation_gradient)
-        self.weights -= alpha * weights_gradient
-        self.bias -= alpha * output_gradient * activation_gradient
-
-        return input_gradient, weights_gradient, bias_gradient
-

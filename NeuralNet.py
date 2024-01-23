@@ -1,9 +1,9 @@
 import json
 
 import numpy as np
+from layers import Dense, Layer
 
 import optimizers
-from DenseLayer import DenseLayer, Layer
 from losses import (binary_crossentropy, binary_crossentropy_derivative,
                     binary_crossentropy_elem)
 from metrics import accuracy_score, f1_score, precision_score, recall_score
@@ -13,7 +13,7 @@ from utils import convert_to_binary_pred
 class NeuralNet():
     def __init__(self, name="NeuralNet"):
         self.network = None
-        self.compiled = False
+        self._is_compiled = False
         self.optimizer = None
         self.history = {}
         self.name = name
@@ -28,8 +28,8 @@ class NeuralNet():
             print("Creating a neural network...")
             network = []
             for layer_data in net:
-                if layer_data['type'] == 'DenseLayer':
-                    network.append(DenseLayer(layer_data['input_shape'],
+                if layer_data['type'] == 'Dense':
+                    network.append(Dense(layer_data['input_shape'],
                                             layer_data['output_shape'], 
                                             activation=layer_data['activation'],
                                             weights_initializer=layer_data['weights_initializer']))
@@ -60,24 +60,6 @@ class NeuralNet():
             input_data = layer.forward(input_data)
         return input_data
 
-    def backward(self, output_gradient, alpha):
-        grads = {}
-        total_layers = len(self.network)
-        for index, layer in enumerate(reversed(self.network)):
-            layer_num = total_layers - index - 1
-            #print('layer_num:', layer_num)
-            output_gradient, weights_gradient, bias_gradient = layer.backward(output_gradient, alpha)
-
-            layer_grads = {
-                f'W{layer_num + 1}': weights_gradient,
-                f'b{layer_num + 1}': bias_gradient
-            }
-            for param_name, grad in layer_grads.items():
-                grads[param_name] = grad
-
-        # Return the aggregated gradients
-        return grads
-
     def backprop(self, y_true, y_pred):
         grad = self.loss_prime(y_true, y_pred)
 
@@ -93,7 +75,7 @@ class NeuralNet():
     def get_weights(self):
         weights_and_biases = []
         for layer in self.network:
-            if isinstance(layer, DenseLayer):
+            if isinstance(layer, Dense):
                 weights_and_biases.append(layer.weights)
                 weights_and_biases.append(layer.bias)
         return weights_and_biases
@@ -105,15 +87,15 @@ class NeuralNet():
             raise ValueError("Invalid input of list: not enought values to set weights and biases.")
 
         for index, layer in zip(range(0, len(initial_weights), 2), self.network):
-            if isinstance(layer, DenseLayer):
+            if isinstance(layer, Dense):
                 layer.set_weights(initial_weights[index], initial_weights[index + 1])
 
     def get_network_topology(self):
         layers = []
         for layer in self.network:
-            if isinstance(layer, DenseLayer):
+            if isinstance(layer, Dense):
                 layer_data = {
-                    'type': 'DenseLayer',
+                    'type': 'Dense',
                     'shape': layer.shape,
                     'input_shape': layer.shape[0],
                     'output_shape': layer.shape[1],
@@ -165,19 +147,21 @@ class NeuralNet():
         return accuracy, precision, recall, f1
 
     def compile(self, 
-                loss, 
+                optimizer='rmsprop', 
+                loss=None, 
                 metrics=None, 
-                optimizer='sgd', 
                 loss_weights=None, 
                 weighted_metrics=None, 
                 run_eagerly=None, 
-                steps_per_execution=1
+                steps_per_execution=None
         ):
 
         if isinstance(optimizer, optimizers.Optimizer):
             self.optimizer = optimizer
         elif optimizer == 'sgd':
             self.optimizer = optimizers.SGD()
+        elif optimizer == 'rmsprop':
+            self.optimizer = optimizers.RMSprop()
 
         if not loss:
             raise ValueError("No loss found. You may have forgotten to provide a `loss` argument in the `compile()` method.")
@@ -195,7 +179,7 @@ class NeuralNet():
             for metric in metrics:
                 self.history[metric.lower()] = []
 
-        self.compiled = True
+        self._is_compiled = True
         return
 
     def update_history(self, y_true, y_pred, validation=False):
@@ -222,7 +206,7 @@ class NeuralNet():
             batch_size, 
             epochs=1, 
             validation_data=None):
-        if self.compiled == False:
+        if self._is_compiled == False:
             raise RuntimeError("You must compile your model before training/testing. Use `model.compile(optimizer, loss)")
         patience=5
         lr_decay_factor=0.1
@@ -266,7 +250,7 @@ class NeuralNet():
             print(f'\nEpoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f}', end="")
             self.history['loss'].append(total_loss)
     
-            accuracy = self.update_history(y_train_batch, binary_predictions)
+            accuracy, _, _, _ = self.update_history(y_train_batch, binary_predictions)
 
             # Calculate validation loss and accuracy
             if validation_data:
@@ -287,7 +271,7 @@ class NeuralNet():
                 self.history['val_loss'].append(val_loss)
                 print(f' - val_loss: {val_loss:.4f}', end="")
     
-                val_accuracy = self.update_history(y_val_batch, val_binary_predictions, True)
+                val_accuracy, _, _, _ = self.update_history(y_val_batch, val_binary_predictions, True)
 
                 # Check if validation loss is decreasing
                 if val_loss < best_loss:
