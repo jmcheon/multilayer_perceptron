@@ -1,4 +1,3 @@
-
 #  Multilayer Perceptron 
 >*_Summary: This project is an introduction to artificial neural networks, with the implementation of a multilayer perceptron_*
 
@@ -58,7 +57,7 @@ Class distribution: 357 benign, 212 malignant
 
 #### Usage
 ``` bash
-usage: multilayer_perceptron.py [-h] [-s SPLIT] [-t] [-p] [-c [{models,optimizers}]]
+usage: main.py [-h] [-s SPLIT] [-t] [-p] [-c [{models,optimizers}]]
 
 This program is an implementation of a Multilayer Perceptron (MLP), a type of artificial neural network designed for tasks such as classification, regression, and pattern recognition.
 
@@ -80,10 +79,10 @@ output_shape = 1
 loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=30
 
 network = model.create_network([
-        DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu'),
-        DenseLayer(10, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid')
+        Dense(input_shape, 20, activation='relu'),
+        Dense(20, 10, activation='relu'),
+        Dense(10, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid')
         ])
 ```
 #### Training Learning Curves
@@ -101,25 +100,25 @@ input_shape = 30
 output_shape = 1
 loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=50
 
-    model1 = NeuralNet()
+    model1 = Model()
     model1.create_network([
-        DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu'),
-        DenseLayer(10, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid')
+        Dense(input_shape, 20, activation='relu'),
+        Dense(20, 10, activation='relu'),
+        Dense(10, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid')
         ])
 
-    model2 = NeuralNet()
+    model2 = Model()
     model2.create_network([
-        DenseLayer(input_shape, 15, activation='relu'),
-        DenseLayer(15, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid')
+        Dense(input_shape, 15, activation='relu'),
+        Dense(15, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid')
         ])
 
-    model3 = NeuralNet()
+    model3 = Model()
     model3.create_network([
-        DenseLayer(input_shape, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid')
+        Dense(input_shape, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid')
         ])
 ```
 
@@ -136,12 +135,12 @@ input_shape = 30
 output_shape = 1
 loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=30
 
-    model = NeuralNet()
+    model = Model()
     model.create_network([
-        DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu'),
-        DenseLayer(10, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid')
+        Dense(input_shape, 20, activation='relu'),
+        Dense(20, 10, activation='relu'),
+        Dense(10, 5, activation='relu'),
+        Dense(5, output_shape, activation='sigmoid')
         ])
         
  model_list = [                                                                                         
@@ -157,3 +156,4 @@ loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=30
 Model1 - Train accuracy: 0.9318 Validation accuracy: 0.9473
 Model2 - Train accuracy: 0.9340 Validation accuracy: 0.9649
 Model2 - Train accuracy: 0.9582 Validation accuracy: 0.9561
+

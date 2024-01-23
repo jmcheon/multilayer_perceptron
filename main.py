@@ -6,7 +6,7 @@ import numpy as np
 
 import config
 import srcs.optimizers as optimizers
-from NeuralNet import NeuralNet
+from Model import Model
 from srcs.layers import Dense
 from srcs.plots import plot_learning_curves, plot_models
 from srcs.utils import load_split_data, split_dataset_save
@@ -36,13 +36,13 @@ def prediction():
         print(f"Input file errer: {config_path} doesn't exist.")
         sys.exit()
 
-    model = NeuralNet()
+    model = Model()
     model.create_network(config_data['network_topology'])
     model.set_weights(list(weights))
     model.predict(x, y)
 
 def create_model(input_shape, output_shape):
-    model = NeuralNet()
+    model = Model()
     network = model.create_network([
         Dense(input_shape, 20, activation='relu'),
         Dense(20, 10, activation='relu'),
@@ -91,7 +91,7 @@ def multiple_models_test():
     x_train, y_train = load_split_data(train_path)
     x_val, y_val = load_split_data(valid_path)
 
-    model1 = NeuralNet()
+    model1 = Model()
     model1.create_network([
         Dense(input_shape, 20, activation='relu'),
         Dense(20, 10, activation='relu'),
@@ -99,14 +99,14 @@ def multiple_models_test():
         Dense(5, output_shape, activation='sigmoid'),
         ], name="model1")
 
-    model2 = NeuralNet()
+    model2 = Model()
     model2.create_network([
         Dense(input_shape, 15, activation='relu'),
         Dense(15, 5, activation='relu'),
         Dense(5, output_shape, activation='sigmoid'),
         ], name="model2")
 
-    model3 = NeuralNet()
+    model3 = Model()
     model3.create_network([
         Dense(input_shape, 5, activation='relu'),
         Dense(5, output_shape, activation='sigmoid'),
@@ -134,7 +134,7 @@ def optimizer_test():
     x_train, y_train = load_split_data(train_path)
     x_val, y_val = load_split_data(valid_path)
 
-    model1 = NeuralNet()
+    model1 = Model()
     model1.create_network([
         Dense(input_shape, 20, activation='relu'),
         Dense(20, 10, activation='relu'),
@@ -142,7 +142,7 @@ def optimizer_test():
         Dense(5, output_shape, activation='sigmoid'),
         ])
 
-    model2 = NeuralNet()
+    model2 = Model()
     model2.create_network([
         Dense(input_shape, 20, activation='relu'),
         Dense(20, 10, activation='relu'),
@@ -150,7 +150,7 @@ def optimizer_test():
         Dense(5, output_shape, activation='sigmoid'),
         ])
 
-    model3 = NeuralNet()
+    model3 = Model()
     model3.create_network([
         Dense(input_shape, 20, activation='relu'),
         Dense(20, 10, activation='relu'),
@@ -164,7 +164,7 @@ def optimizer_test():
             (model3, optimizers.Adam(learning_rate=1e-3)),
     ]
 
-    weights = load_weights('saved_tensorflow_weights.npy')
+    weights = load_weights(config.data_dir + config.tensorflow_weights_npy)
     #for i in range(len(weights)):
     #    print('weights shape:', weights[i].shape)
     for (model, optimizer) in model_list:
@@ -185,19 +185,19 @@ def same_model_test():
     x_train, y_train = load_split_data(train_path)
     x_val, y_val = load_split_data(valid_path)
 
-    model1 = NeuralNet()
+    model1 = Model()
     model1.create_network([
         Dense(input_shape, 5, activation='relu'),
         Dense(5, output_shape, activation='sigmoid'),
         ])
 
-    model2 = NeuralNet()
+    model2 = Model()
     model2.create_network([
         Dense(input_shape, 5, activation='relu'),
         Dense(5, output_shape, activation='sigmoid'),
         ])
 
-    model3 = NeuralNet()
+    model3 = Model()
     model3.create_network([
         Dense(input_shape, 5, activation='relu'),
         Dense(5, output_shape, activation='sigmoid'),
@@ -221,7 +221,7 @@ def bonus_test(history=False):
     x_train, y_train = load_split_data(train_path)
     x_val, y_val = load_split_data(valid_path)
 
-    model = NeuralNet()
+    model = Model()
     model.create_network([
         Dense(input_shape, 5, activation='relu'),
         Dense(5, output_shape, activation='sigmoid')

@@ -12,8 +12,8 @@ from srcs.metrics import (accuracy_score, f1_score, precision_score,
 from srcs.utils import convert_to_binary_pred
 
 
-class NeuralNet():
-    def __init__(self, name="NeuralNet"):
+class Model():
+    def __init__(self, name="Model"):
         self._is_compiled = False
         self.layers = None
         self.optimizer = None
