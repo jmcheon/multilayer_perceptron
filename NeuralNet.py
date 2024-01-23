@@ -214,6 +214,8 @@ class NeuralNet():
             self.history[valid + 'recall'].append(recall)
             print(f" - {valid}recall: {recall:.2f}%", end="")
 
+        return accuracy, precision, recall, f1
+
     def fit(self, 
             x_train, 
             y_train, 
@@ -264,7 +266,7 @@ class NeuralNet():
             print(f'\nEpoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f}', end="")
             self.history['loss'].append(total_loss)
     
-            self.update_history(y_train_batch, binary_predictions)
+            accuracy = self.update_history(y_train_batch, binary_predictions)
 
             # Calculate validation loss and accuracy
             if validation_data:
@@ -285,7 +287,7 @@ class NeuralNet():
                 self.history['val_loss'].append(val_loss)
                 print(f' - val_loss: {val_loss:.4f}', end="")
     
-                self.update_history(y_val_batch, val_binary_predictions, True)
+                val_accuracy = self.update_history(y_val_batch, val_binary_predictions, True)
 
                 # Check if validation loss is decreasing
                 if val_loss < best_loss:
@@ -301,8 +303,10 @@ class NeuralNet():
                 print(f"Early stopping at epoch {epoch}.")
                 break
             '''
-
-        #print('Train accuracy:', accuracy, 'Validation accuracy:', val_accuracy)
+        if accuracy:
+            print('\nTrain accuracy:', accuracy)
+        if val_accuracy:
+            print('\nValidation accuracy:', val_accuracy)
         return self
 
     def predict(self, x_test, y_test):

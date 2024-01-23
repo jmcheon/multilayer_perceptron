@@ -1,19 +1,29 @@
 import numpy as np
 
+import initializers
 from activations import (relu, relu_derivative, sigmoid, sigmoid_derivative,
                          softmax)
 from utils import heUniform
 
 
 class Layer:
-    def __init__(self, input_shape, output_shape, activation, weights_initializer):
+    def __init__(self, 
+                 input_shape, 
+                 output_shape, 
+                 activation, 
+                 weights_initializer,
+                 bias_initializer='zeros',
+        ):
         self.shape = (input_shape, output_shape)
         #print('shape:', self.shape)
         self.outputs = []
         self.inputs = []
 
         # Initialize weights and bias
-        if weights_initializer == 'heUniform':
+        if weights_initializer == 'glorot_uniform':
+            self.weights = initializers.glorot_uniform(input_shape, output_shape)
+            self.weights_initializer = 'glorot_uniform'
+        elif weights_initializer == 'heUniform':
             self.weights = heUniform((input_shape, output_shape))
             self.weights_initializer = 'heUniform'
             self.bias = heUniform(output_shape)
@@ -21,13 +31,12 @@ class Layer:
             self.weights = np.random.randn(input_shape, output_shape)
             self.weights_initializer = 'random'
             self.bias = np.random.randn(output_shape)
-        elif weights_initializer == 'zero':
+        elif weights_initializer == 'zeros':
             self.weights = np.zeros((input_shape, output_shape))
-            self.weights_initializer = 'zero'
-            self.bias = np.zeros((output_shape))
-            #self.bias = np.zeros(self.weights.shape[1])
-            
+            self.weights_initializer = 'zeros'
 
+        if bias_initializer == 'zeros':
+            self.bias = np.zeros((output_shape))
 
         # Activation function
         if activation.lower() == 'relu':
@@ -47,8 +56,14 @@ class Layer:
         pass
 
 class DenseLayer(Layer):
-    def __init__(self, input_shape, output_shape, activation, weights_initializer='random'):
-        super().__init__(input_shape, output_shape, activation, weights_initializer)
+    def __init__(self, 
+                 input_shape, 
+                 output_shape, 
+                 activation, 
+                 weights_initializer='glorot_uniform',
+                 bias_initializer='zeros',
+        ):
+        super().__init__(input_shape, output_shape, activation, weights_initializer, bias_initializer)
         self.deltas = None
         print(self.bias.shape)
 

@@ -40,17 +40,16 @@ def prediction():
     model.set_weights(list(weights))
     model.predict(x, y)
 
-def create_model():
+def create_model(input_shape, output_shape):
     model = NeuralNet()
     network = model.create_network([
         DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu', weights_initializer='random'),
-        DenseLayer(10, 5, activation='relu', weights_initializer='random'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(20, 10, activation='relu'),
+        DenseLayer(10, 5, activation='relu'),
+        DenseLayer(5, output_shape, activation='sigmoid')
         ])
 
     model.compile(
-            #optimizer='sgd', 
             optimizer=optimizers.SGD(learning_rate=1e-3),
             #optimizer=optimizers.RMSprop(learning_rate=1e-4),
             loss='binary_crossentropy',
@@ -59,21 +58,21 @@ def create_model():
     weights = load_weights('saved_tensorflow_weights.npy')
     for i in range(len(weights)):
         print('weights shape:', weights[i].shape)
-    model.set_weights(list(weights))
+    #model.set_weights(list(weights))
     #print(model.get_weights())
 
     return model
 
-def train_model(plot=True, save=True):
+def train_model(input_shape, output_shape, plot=True, save=True):
     x_train, y_train = load_split_data(train_path)
     x_val, y_val = load_split_data(valid_path)
     print(x_train.shape, y_train.shape)
 
-    model = create_model()
+    model = create_model(input_shape, output_shape)
 
     history = model.fit(
             x_train, y_train, validation_data=(x_val, y_val), 
-            batch_size=1, 
+            batch_size=30, 
             epochs=30
     )
     if plot:
@@ -81,6 +80,7 @@ def train_model(plot=True, save=True):
     if save:
         model.save_model()
     return model
+
 
 def multiple_models_test():
     print("Compare multiple models...")
@@ -91,28 +91,28 @@ def multiple_models_test():
     model1 = NeuralNet()
     model1.create_network([
         DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu', weights_initializer='random'),
-        DenseLayer(10, 5, activation='relu', weights_initializer='random'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(20, 10, activation='relu'),
+        DenseLayer(10, 5, activation='relu'),
+        DenseLayer(5, output_shape, activation='sigmoid'),
         ], name="model1")
 
     model2 = NeuralNet()
     model2.create_network([
         DenseLayer(input_shape, 15, activation='relu'),
-        DenseLayer(15, 5, activation='relu', weights_initializer='random'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(15, 5, activation='relu'),
+        DenseLayer(5, output_shape, activation='sigmoid'),
         ], name="model2")
 
     model3 = NeuralNet()
     model3.create_network([
         DenseLayer(input_shape, 5, activation='relu'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(5, output_shape, activation='sigmoid'),
         ], name="model3")
 
     model_list = [
-            (model1, optimizers.SGD(learning_rate=1e-4)), 
-            (model2, optimizers.SGD(learning_rate=1e-4)),
-            (model3, optimizers.SGD(learning_rate=1e-4)),
+            (model1, optimizers.SGD(learning_rate=1e-3)), 
+            (model2, optimizers.SGD(learning_rate=1e-3)),
+            (model3, optimizers.SGD(learning_rate=1e-3)),
     ]
     #model_list = [model1, model2, model3]
     plot_models(
@@ -134,31 +134,31 @@ def optimizer_test():
     model1 = NeuralNet()
     model1.create_network([
         DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu', weights_initializer='random'),
-        DenseLayer(10, 5, activation='relu', weights_initializer='random'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(20, 10, activation='relu'),
+        DenseLayer(10, 5, activation='relu'),
+        DenseLayer(5, output_shape, activation='sigmoid'),
         ])
 
     model2 = NeuralNet()
     model2.create_network([
         DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu', weights_initializer='random'),
-        DenseLayer(10, 5, activation='relu', weights_initializer='random'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(20, 10, activation='relu'),
+        DenseLayer(10, 5, activation='relu'),
+        DenseLayer(5, output_shape, activation='sigmoid'),
         ])
 
     model3 = NeuralNet()
     model3.create_network([
         DenseLayer(input_shape, 20, activation='relu'),
-        DenseLayer(20, 10, activation='relu', weights_initializer='random'),
-        DenseLayer(10, 5, activation='relu', weights_initializer='random'),
-        DenseLayer(5, output_shape, activation='sigmoid', weights_initializer='random')
+        DenseLayer(20, 10, activation='relu'),
+        DenseLayer(10, 5, activation='relu'),
+        DenseLayer(5, output_shape, activation='sigmoid'),
         ])
 
     model_list = [
-            (model1, optimizers.SGD(learning_rate=1e-4)), 
-            (model2, optimizers.RMSprop(learning_rate=1e-4)),
-            (model3, optimizers.Adam(learning_rate=1e-4)),
+            (model1, optimizers.SGD(learning_rate=1e-3)), 
+            (model2, optimizers.RMSprop(learning_rate=1e-3)),
+            (model3, optimizers.Adam(learning_rate=1e-3)),
     ]
 
     weights = load_weights('saved_tensorflow_weights.npy')
@@ -267,7 +267,7 @@ if __name__ == "__main__":
     if args.split:
         split_dataset_save(args.split, train_path, valid_path, train_size=0.8, random_state=42)
     elif args.train:
-        train_model()
+        train_model(input_shape, output_shape)
     elif args.predict:
         prediction()
     elif args.compare == "models":
