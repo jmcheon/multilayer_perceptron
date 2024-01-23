@@ -126,10 +126,10 @@ loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=50
 
 | models |
 |---------------------------------------------|
-|![models](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/71250a5d-7f3a-44fa-95a4-d04f2b450d14)|
-Model1 - Train accuracy: 0.9867 Validation accuracy: 0.9912
-Model2 - Train accuracy: 0.9823 Validation accuracy: 0.9912
-Model3 - Train accuracy: 0.9801 Validation accuracy: 0.9912
+|![models](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/accc3f5d-06c9-441b-89cd-1272494d9f5d)|
+Model1 - Train accuracy: 0.9604 Validation accuracy: 0.9736
+Model2 - Train accuracy: 0.9560 Validation accuracy: 0.9824
+Model3 - Train accuracy: 0.8879 Validation accuracy: 0.8771
 ### Optimizers - SGD, RMSprop, Adam
 ``` python
 input_shape = 30
@@ -154,5 +154,6 @@ loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=30
 | optimizers |
 |---------------------------------------------|
 |![optimizers](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/c1a78d9d-1e9f-431a-b560-ee880e751350)|
-Model1 - Train accuracy: 0.9824 Validation accuracy: 0.9912
-Model2 - Train accuracy: 0.9758 Validation accuracy: 0.9912
+Model1 - Train accuracy: 0.9318 Validation accuracy: 0.9473
+Model2 - Train accuracy: 0.9340 Validation accuracy: 0.9649
+Model2 - Train accuracy: 0.9582 Validation accuracy: 0.9561
