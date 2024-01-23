@@ -164,8 +164,8 @@ def optimizer_test():
     ]
 
     weights = load_weights('saved_tensorflow_weights.npy')
-    for i in range(len(weights)):
-        print('weights shape:', weights[i].shape)
+    #for i in range(len(weights)):
+    #    print('weights shape:', weights[i].shape)
     for (model, optimizer) in model_list:
         model.set_weights(list(weights))
 

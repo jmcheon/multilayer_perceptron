@@ -15,11 +15,6 @@ def convert_to_binary_pred(y_pred, threshold=0.5):
     binary_pred = (y_pred > threshold).astype(int)
     return binary_pred
 
-def heUniform(shape):
-    fan_in, _ = shape
-    limit = np.sqrt(6 / fan_in)
-    return np.random.uniform(-limit, limit, shape)
-
 class StandardScaler:
     def __init__(self):
         self.mean = None

@@ -1,9 +1,9 @@
 import json
 
 import numpy as np
-from layers import Dense, Layer
 
 import optimizers
+from layers import Dense, Layer
 from losses import (binary_crossentropy, binary_crossentropy_derivative,
                     binary_crossentropy_elem)
 from metrics import accuracy_score, f1_score, precision_score, recall_score
@@ -12,35 +12,35 @@ from utils import convert_to_binary_pred
 
 class NeuralNet():
     def __init__(self, name="NeuralNet"):
-        self.network = None
         self._is_compiled = False
+        self.layers = None
         self.optimizer = None
         self.history = {}
-        self.name = name
         self.metrics = []
+        self.name = name
 
     def create_network(self, net, name=None):
-        network = None
+        layers = None
         if isinstance(net, list) and all(isinstance(layer, Layer) for layer in net):
-            network = net
-            self.network = network
+            layers = net
+            self.layers = layers
         elif isinstance(net, list) and all(isinstance(layer_data, dict) for layer_data in net):
             print("Creating a neural network...")
-            network = []
+            layers = []
             for layer_data in net:
                 if layer_data['type'] == 'Dense':
-                    network.append(Dense(layer_data['input_shape'],
+                    layers.append(Dense(layer_data['input_shape'],
                                             layer_data['output_shape'], 
                                             activation=layer_data['activation'],
                                             weights_initializer=layer_data['weights_initializer']))
-            self.network = network
+            self.layers = layers
         else:
             raise TypeError("Invalid form of input to create a neural network.")
 
         if name:
             self.name = name
 
-        return network
+        return layers
 
     def save_model(self):
         # Save model configuration as a JSON file
@@ -56,7 +56,7 @@ class NeuralNet():
 
 
     def forward(self, input_data):
-        for layer in self.network:
+        for layer in self.layers:
             input_data = layer.forward(input_data)
         return input_data
 
@@ -64,17 +64,17 @@ class NeuralNet():
         grad = self.loss_prime(y_true, y_pred)
 
         self.optimizer.pre_update_params()
-        total_layers = len(self.network)
-        for index, layer in enumerate(reversed(self.network)):
+        total_layers = len(self.layers)
+        for index, layer in enumerate(reversed(self.layers)):
             layer_num = total_layers - index - 2
             layer.set_activation_gradient(grad)
             grad = np.dot(layer.deltas, layer.weights.T)
-            self.optimizer.update_params(layer, self.network[layer_num].outputs.T)
+            self.optimizer.update_params(layer, self.layers[layer_num].outputs.T)
         self.optimizer.post_update_params()
 
     def get_weights(self):
         weights_and_biases = []
-        for layer in self.network:
+        for layer in self.layers:
             if isinstance(layer, Dense):
                 weights_and_biases.append(layer.weights)
                 weights_and_biases.append(layer.bias)
@@ -83,16 +83,16 @@ class NeuralNet():
     def set_weights(self, initial_weights):
         if not isinstance(initial_weights, list):
             raise TypeError("Invalid type of initial_weights, a list of weights required.")
-        if not len(initial_weights) == 2 * len(self.network):
+        if not len(initial_weights) == 2 * len(self.layers):
             raise ValueError("Invalid input of list: not enought values to set weights and biases.")
 
-        for index, layer in zip(range(0, len(initial_weights), 2), self.network):
+        for index, layer in zip(range(0, len(initial_weights), 2), self.layers):
             if isinstance(layer, Dense):
                 layer.set_weights(initial_weights[index], initial_weights[index + 1])
 
     def get_network_topology(self):
         layers = []
-        for layer in self.network:
+        for layer in self.layers:
             if isinstance(layer, Dense):
                 layer_data = {
                     'type': 'Dense',
@@ -108,8 +108,8 @@ class NeuralNet():
     def to_json(self, file_path=None):
         model_data = {
             'network_topology': self.get_network_topology(),
-            'input_size': self.network[0].shape[0],
-            'output_size': self.network[-1].shape[1],
+            'input_size': self.layers[0].shape[0],
+            'output_size': self.layers[-1].shape[1],
         }
         json_data = json.dumps(model_data)
 
@@ -209,9 +209,6 @@ class NeuralNet():
         if self._is_compiled == False:
             raise RuntimeError("You must compile your model before training/testing. Use `model.compile(optimizer, loss)")
         patience=5
-        lr_decay_factor=0.1
-        lr_decay_patience=3
-     
         best_loss = float('inf')
         counter = 0
 

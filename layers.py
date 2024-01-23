@@ -1,9 +1,7 @@
 import numpy as np
 
+import activations
 import initializers
-from activations import (relu, relu_derivative, sigmoid, sigmoid_derivative,
-                         softmax)
-from utils import heUniform
 
 
 class Layer:
@@ -15,7 +13,6 @@ class Layer:
                  bias_initializer='zeros',
         ):
         self.shape = (input_shape, output_shape)
-        #print('shape:', self.shape)
         self.outputs = []
         self.inputs = []
 
@@ -23,10 +20,10 @@ class Layer:
         if weights_initializer == 'glorot_uniform':
             self.weights = initializers.glorot_uniform(input_shape, output_shape)
             self.weights_initializer = 'glorot_uniform'
-        elif weights_initializer == 'heUniform':
-            self.weights = heUniform((input_shape, output_shape))
-            self.weights_initializer = 'heUniform'
-            self.bias = heUniform(output_shape)
+        elif weights_initializer == 'he_uniform':
+            self.weights = initializers.he_uniform((input_shape, output_shape))
+            self.weights_initializer = 'he_uniform'
+            self.bias = initializers.he_uniform(output_shape)
         elif weights_initializer == 'random':
             self.weights = np.random.randn(input_shape, output_shape)
             self.weights_initializer = 'random'
@@ -40,13 +37,13 @@ class Layer:
 
         # Activation function
         if activation.lower() == 'relu':
-            self.activation = relu
-            self.activation_derivative = lambda gradient :relu_derivative(self.outputs, gradient)
+            self.activation = activations.relu
+            self.activation_derivative = lambda gradient :activations.relu_derivative(self.outputs, gradient)
         elif activation.lower() == 'sigmoid':
-            self.activation = sigmoid
-            self.activation_derivative = lambda gradient :sigmoid_derivative(self.outputs, gradient)
+            self.activation = activations.sigmoid
+            self.activation_derivative = lambda gradient :activations.sigmoid_derivative(self.outputs, gradient)
         elif activation.lower() == 'softmax':
-            self.activation = softmax
+            self.activation = activations.softmax
 
 
     def forward(self, x):
