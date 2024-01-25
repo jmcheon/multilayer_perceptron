@@ -31,10 +31,15 @@ class Model():
             layers = []
             for layer_data in net:
                 if layer_data['type'] == 'Dense':
-                    layers.append(Dense(layer_data['input_shape'],
-                                            layer_data['output_shape'], 
-                                            activation=layer_data['activation'],
-                                            weights_initializer=layer_data['weights_initializer']))
+                    if 'weights_initializer' not in layer_data:
+                        layers.append(Dense(layer_data['shape'][0],
+                                                layer_data['shape'][1], 
+                                                activation=layer_data['activation']))
+                    else:
+                        layers.append(Dense(layer_data['shape'][0],
+                                                layer_data['shape'][1], 
+                                                activation=layer_data['activation'],
+                                                weights_initializer=layer_data['weights_initializer']))
             self.layers = layers
         else:
             raise TypeError("Invalid form of input to create a neural network.")
@@ -46,7 +51,7 @@ class Model():
 
     def save_model(self):
         # Save model configuration as a JSON file
-        model_config = self.to_json()
+        model_config = self.get_network_topology()
         with open(config.data_dir + config.config_path, 'w') as json_file:
             json.dump(model_config, json_file)
             print(f"> Saving model configuration to '{config.data_dir + config.config_path}'")
@@ -99,28 +104,13 @@ class Model():
                 layer_data = {
                     'type': 'Dense',
                     'shape': layer.shape,
-                    'input_shape': layer.shape[0],
-                    'output_shape': layer.shape[1],
+                    #'input_shape': layer.shape[0],
+                    #'output_shape': layer.shape[1],
                     'activation': f'{layer.activation.__name__}',
                     'weights_initializer': f'{layer.weights_initializer}',
                 }
                 layers.append(layer_data)
         return layers 
-
-    def to_json(self, file_path=None):
-        model_data = {
-            'network_topology': self.get_network_topology(),
-            'input_size': self.layers[0].shape[0],
-            'output_size': self.layers[-1].shape[1],
-        }
-        json_data = json.dumps(model_data)
-
-        if file_path:
-            with open(file_path, 'w') as f:
-                f.write(json_data)
-            print(f"Model data saved to '{file_path}'")
-
-        return json_data
 
     def print_history(self):
         if len(self.history) == 0:
@@ -285,11 +275,12 @@ class Model():
             if counter >= patience:
                 print(f"Early stopping at epoch {epoch}.")
                 break
-            '''
         if accuracy:
             print('\nTrain accuracy:', accuracy)
         if val_accuracy:
             print('\nValidation accuracy:', val_accuracy)
+            '''
+        print()
         return self
 
     def predict(self, x_test, y_test):
