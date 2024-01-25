@@ -193,56 +193,6 @@ class ModelTrainer():
         )
         return histories, model_names
     
-    def multiple_models_test(self):
-        print("Compare multiple models...")
-    
-        x_train, y_train = load_split_data(self.train_path)
-        x_val, y_val = load_split_data(self.valid_path)
-    
-        model1 = Model()
-        model1.create_network([
-            Dense(self.input_shape, 20, activation='relu'),
-            Dense(20, 10, activation='relu'),
-            Dense(10, 5, activation='relu'),
-            Dense(5, self.output_shape, activation='sigmoid'),
-            ], name="model1")
-    
-        model2 = Model()
-        model2.create_network([
-            Dense(self.input_shape, 15, activation='relu'),
-            Dense(15, 5, activation='relu'),
-            Dense(5, self.output_shape, activation='sigmoid'),
-            ], name="model2")
-    
-        model3 = Model()
-        model3.create_network([
-            Dense(self.input_shape, 5, activation='relu'),
-            Dense(5, self.output_shape, activation='sigmoid'),
-            ], name="model3")
-    
-        model_list = [
-                model1,
-                model2,
-                model3,
-        ]
-        optimizer_list = [
-                optimizers.SGD(learning_rate=1e-3), 
-                optimizers.SGD(learning_rate=1e-3),
-                optimizers.SGD(learning_rate=1e-3),
-        ]
-        histories, model_names = self.train_models(
-            model_list,
-            x_train, 
-            y_train, 
-            optimizer_list,
-            loss='binary_crossentropy', 
-            metrics=['accuracy', 'Precision', 'Recall'],
-            batch_size=1, 
-            epochs=50,
-            validation_data=(x_val, y_val),
-        )
-
-        return histories, model_names
     
     def optimizer_test(self):
         print("Compare optimizers...")
@@ -277,28 +227,3 @@ class ModelTrainer():
         )
     
         return histories, model_names
-    
-    def bonus_test(self, history=False):
-        x_train, y_train = load_split_data(self.train_path)
-        x_val, y_val = load_split_data(self.valid_path)
-    
-        model = Model()
-        model.create_network([
-            Dense(self.input_shape, 5, activation='relu'),
-            Dense(5, self.output_shape, activation='sigmoid')
-            ])
-
-        model.compile(
-                optimizer=optimizers.SGD(learning_rate=1e-3),
-                loss='binary_crossentropy',
-                metrics=['accuracy', 'Precision', 'Recall'],
-        )
-    
-        model_history = model.fit(
-                x_train, y_train, validation_data=(x_val, y_val), 
-                batch_size=5,
-                epochs=30
-        )
-        #plot_learning_curves(model_history)
-        if history == True:
-            print("medel's history:\n", model.history)

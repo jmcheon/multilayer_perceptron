@@ -88,7 +88,6 @@ if __name__ == "__main__":
     if args.params:
         params = load_config(args.params)
         #print(params)
-
     if args.split:
         split_dataset_save(args.split, train_path, valid_path, train_size=0.8, random_state=42)
 
@@ -114,15 +113,8 @@ if __name__ == "__main__":
 
     elif args.predict:
         prediction()
-
     elif args.compare == "optimizers":
         histories, model_names = trainer.optimizer_test()
-
-    elif args.compare == "early stopping":
-        trainer.bonus_test()
-
-    elif args.compare == "history":
-        trainer.bonus_test(True)
     else:
         print(f"Usage: python {sys.argv[0]} -h")
 
