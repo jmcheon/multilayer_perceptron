@@ -11,8 +11,8 @@ from srcs.utils import load_config, load_split_data, load_weights
 
 
 def prediction():
-    weights_path = config.data_dir + config.weights_path
-    config_path = config.data_dir + config.config_path
+    weights_path = config.weights_dir + config.weights_path
+    config_path = config.models_dir + config.config_path
     test_path = config.data_dir + config.test_path
 
     x, y = load_split_data(test_path)

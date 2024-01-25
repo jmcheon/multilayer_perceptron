@@ -48,7 +48,7 @@ class ModelTrainer():
                 metrics=['accuracy', 'Precision', 'Recall'],
         )
         '''
-        weights = load_weights(config.data_dir + config.tensorflow_weights_npy)
+        weights = load_weights(config.weights_dir + config.tensorflow_weights_npy)
         '''
         for i in range(len(weights)):
             print('weights shape:', weights[i].shape)

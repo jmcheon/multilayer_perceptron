@@ -52,14 +52,14 @@ class Model():
     def save_model(self):
         # Save model configuration as a JSON file
         model_config = self.get_network_topology()
-        with open(config.data_dir + config.config_path, 'w') as json_file:
+        with open(config.models_dir + config.config_path, 'w') as json_file:
             json.dump(model_config, json_file)
-            print(f"> Saving model configuration to '{config.data_dir + config.config_path}'")
+            print(f"> Saving model configuration to '{config.models_dir + config.config_path}'")
         
         # Save model weights as a .npy file
         model_weights = self.get_weights()
-        np.save(config.data_dir + config.weights_path, model_weights)
-        print(f"> Saving model weights to '{config.data_dir + config.weights_path}'")
+        np.save(config.weights_dir + config.weights_path, model_weights)
+        print(f"> Saving model weights to '{config.weights_dir + config.weights_path}'")
 
 
     def forward(self, input_data):

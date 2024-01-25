@@ -1,0 +1,53 @@
+[
+  [ 
+    {
+      "type": "Dense",
+      "shape": [30, 20],
+      "activation": "relu"
+    },
+    {
+      "type": "Dense",
+      "shape": [20, 10],
+      "activation": "relu"
+    },
+    {
+      "type": "Dense",
+      "shape": [10, 5],
+      "activation": "relu"
+    },
+    {
+      "type": "Dense",
+      "shape": [5, 1],
+      "activation": "sigmoid"
+    }
+  ],
+  [
+    {
+      "type": "Dense",
+      "shape": [30, 15],
+      "activation": "relu"
+    },
+    {
+      "type": "Dense",
+      "shape": [15, 5],
+      "activation": "relu"
+    },
+    {
+      "type": "Dense",
+      "shape": [5, 1],
+      "activation": "sigmoid"
+    }
+  ],
+  [
+    {
+      "type": "Dense",
+      "shape": [30, 5],
+      "activation": "relu"
+    },
+    {
+      "type": "Dense",
+      "shape": [5, 1],
+      "activation": "sigmoid"
+    }
+  ]
+]

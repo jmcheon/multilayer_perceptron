@@ -1,5 +1,7 @@
 
-data_dir = './data/'
+data_dir = './datasets/'
+weights_dir = './weights/'
+models_dir = './models/'
 
 #[SAVED MODEL]
 weights_path = 'saved_model_weights.npy'
