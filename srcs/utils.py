@@ -1,8 +1,35 @@
+import json
 import sys
 
 import numpy as np
 import pandas as pd
 
+
+def load_weights(filename):
+    try:
+        weights = np.load(filename, allow_pickle=True)
+    except:
+        print(f"Input file errer: {filename} doesn't exist.")
+        sys.exit()
+    return weights
+
+def load_config(filename):
+    try:
+        with open(filename, 'r') as file:
+            config_data = json.load(file)
+    except json.JSONDecodeError as e:
+        print(f"Failed to decode JSON: {e}")
+        sys.exit()
+    except FileNotFoundError as e:
+        print(f"File not found: {e}")
+        sys.exit()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        sys.exit()
+    except:
+        print(f"Input file errer: can't open {filename}")
+        sys.exit()
+    return config_data
 
 def one_hot_encode_binary_labels(labels):
     one_hot_encoded_labels = np.zeros((len(labels), 2))

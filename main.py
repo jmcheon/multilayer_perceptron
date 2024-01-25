@@ -2,23 +2,13 @@ import argparse
 import json
 import sys
 
-import numpy as np
-
 import config
 import srcs.optimizers as optimizers
 from Model import Model
-from srcs.layers import Dense
-from srcs.plots import plot_learning_curves, plot_models
-from srcs.utils import load_split_data, split_dataset_save
+from ModelPlotter import ModelPlotter
+from ModelTrainer import ModelTrainer
+from srcs.utils import load_config, load_split_data, load_weights
 
-
-def load_weights(filename):
-    try:
-        weights = np.load(filename, allow_pickle=True)
-    except:
-        print(f"Input file errer: {filename} doesn't exist.")
-        sys.exit()
-    return weights
 
 def prediction():
     weights_path = config.data_dir + config.weights_path
@@ -26,217 +16,49 @@ def prediction():
     test_path = config.data_dir + config.test_path
 
     x, y = load_split_data(test_path)
-
     weights = load_weights(weights_path)
-    try:
-        with open(config_path, 'r') as file:
-            json_config = json.load(file)
-        config_data = json.loads(json_config)
-    except:
-        print(f"Input file errer: {config_path} doesn't exist.")
-        sys.exit()
+    config_data = load_config(config_path)
+
 
     model = Model()
-    model.create_network(config_data['network_topology'])
+    model.create_network(config_data)
     model.set_weights(list(weights))
     model.predict(x, y)
 
-def create_model(input_shape, output_shape):
-    model = Model()
-    network = model.create_network([
-        Dense(input_shape, 20, activation='relu'),
-        Dense(20, 10, activation='relu'),
-        Dense(10, 5, activation='relu'),
-        Dense(5, output_shape, activation='sigmoid')
-        ])
+def set_argparse():
+    parser = argparse.ArgumentParser(description=description)
 
-    model.compile(
-            optimizer=optimizers.SGD(learning_rate=1e-3),
-            #optimizer=optimizers.RMSprop(learning_rate=1e-4),
-            loss='binary_crossentropy',
-            metrics=['accuracy', 'Precision', 'Recall'],
-    )
-    '''
-    weights = load_weights('saved_tensorflow_weights.npy')
-    for i in range(len(weights)):
-        print('weights shape:', weights[i].shape)
-    model.set_weights(list(weights))
-    #print(model.get_weights())
-    '''
+    parser.add_argument("--params", type=str, default=None, required=True,
+                        help="Path of model parameters")
 
-    return model
+    parser.add_argument("-s", "--split", type=str, default=None,
+                        help="Split dataset into train and validation sets.")
 
-def train_model(input_shape, output_shape, plot=True, save=True):
-    x_train, y_train = load_split_data(train_path)
-    x_val, y_val = load_split_data(valid_path)
-    print(x_train.shape, y_train.shape)
+    parser.add_argument("-t", "--train", action="store_true", default=False,
+                        help="Train with dataset.")
 
-    model = create_model(input_shape, output_shape)
+    parser.add_argument("-p", "--predict", action="store_true", default=False,
+                        help="Predict using saved model.")
 
-    history = model.fit(
-            x_train, y_train, validation_data=(x_val, y_val), 
-            batch_size=30, 
-            epochs=30
-    )
-    if plot:
-        plot_learning_curves(history)
-    if save:
-        model.save_model()
-    return model
+    parser.add_argument("-c", "--compare", type=str, default=None, nargs='?', choices=["optimizers"],
+                        help="Compare models by plotting learning curves.")
 
+    # for model compiling
+    parser.add_argument('--optimizer', type=str, default='sgd',
+                        help='Gradient descent optimizer')
 
-def multiple_models_test():
-    print("Compare multiple models...")
-
-    x_train, y_train = load_split_data(train_path)
-    x_val, y_val = load_split_data(valid_path)
-
-    model1 = Model()
-    model1.create_network([
-        Dense(input_shape, 20, activation='relu'),
-        Dense(20, 10, activation='relu'),
-        Dense(10, 5, activation='relu'),
-        Dense(5, output_shape, activation='sigmoid'),
-        ], name="model1")
-
-    model2 = Model()
-    model2.create_network([
-        Dense(input_shape, 15, activation='relu'),
-        Dense(15, 5, activation='relu'),
-        Dense(5, output_shape, activation='sigmoid'),
-        ], name="model2")
-
-    model3 = Model()
-    model3.create_network([
-        Dense(input_shape, 5, activation='relu'),
-        Dense(5, output_shape, activation='sigmoid'),
-        ], name="model3")
-
-    model_list = [
-            (model1, optimizers.SGD(learning_rate=1e-3)), 
-            (model2, optimizers.SGD(learning_rate=1e-3)),
-            (model3, optimizers.SGD(learning_rate=1e-3)),
-    ]
-    #model_list = [model1, model2, model3]
-    plot_models(
-            x_train, y_train, validation_data=(x_val, y_val), 
-            #optimizer=optimizers.SGD(learning_rate=1e-3),
-            model_list=model_list, 
-            loss='binary_crossentropy', 
-            metrics=['accuracy', 'Precision', 'Recall'],
-            batch_size=1, 
-            epochs=50
-    )
-
-def optimizer_test():
-    print("Compare optimizers...")
-
-    x_train, y_train = load_split_data(train_path)
-    x_val, y_val = load_split_data(valid_path)
-
-    model1 = Model()
-    model1.create_network([
-        Dense(input_shape, 20, activation='relu'),
-        Dense(20, 10, activation='relu'),
-        Dense(10, 5, activation='relu'),
-        Dense(5, output_shape, activation='sigmoid'),
-        ])
-
-    model2 = Model()
-    model2.create_network([
-        Dense(input_shape, 20, activation='relu'),
-        Dense(20, 10, activation='relu'),
-        Dense(10, 5, activation='relu'),
-        Dense(5, output_shape, activation='sigmoid'),
-        ])
-
-    model3 = Model()
-    model3.create_network([
-        Dense(input_shape, 20, activation='relu'),
-        Dense(20, 10, activation='relu'),
-        Dense(10, 5, activation='relu'),
-        Dense(5, output_shape, activation='sigmoid'),
-        ])
-
-    model_list = [
-            (model1, optimizers.SGD(learning_rate=1e-3)), 
-            (model2, optimizers.RMSprop(learning_rate=1e-3)),
-            (model3, optimizers.Adam(learning_rate=1e-3)),
-    ]
-
-    weights = load_weights(config.data_dir + config.tensorflow_weights_npy)
-    #for i in range(len(weights)):
-    #    print('weights shape:', weights[i].shape)
-    for (model, optimizer) in model_list:
-        model.set_weights(list(weights))
-
-    plot_models(
-            x_train, y_train, validation_data=(x_val, y_val), 
-            model_list=model_list, 
-            metrics=['accuracy', 'Precision', 'Recall'],
-            loss='binary_crossentropy', 
-            batch_size=1, 
-            epochs=30
-    )
-
-def same_model_test():
-    print("Compare same models...")
-
-    x_train, y_train = load_split_data(train_path)
-    x_val, y_val = load_split_data(valid_path)
-
-    model1 = Model()
-    model1.create_network([
-        Dense(input_shape, 5, activation='relu'),
-        Dense(5, output_shape, activation='sigmoid'),
-        ])
-
-    model2 = Model()
-    model2.create_network([
-        Dense(input_shape, 5, activation='relu'),
-        Dense(5, output_shape, activation='sigmoid'),
-        ])
-
-    model3 = Model()
-    model3.create_network([
-        Dense(input_shape, 5, activation='relu'),
-        Dense(5, output_shape, activation='sigmoid'),
-        ])
-
-    model_list = [
-            (model1, optimizers.SGD(learning_rate=1e-3)), 
-            (model2, optimizers.SGD(learning_rate=1e-3)),
-            (model3, optimizers.SGD(learning_rate=1e-3)),
-    ]
-    plot_models(
-            x_train, y_train, validation_data=(x_val, y_val), 
-            model_list=model_list, 
-            loss='binary_crossentropy', 
-            metrics=['accuracy', 'Precision', 'Recall'],
-            batch_size='batch', 
-            epochs=30
-    )
-
-def bonus_test(history=False):
-    x_train, y_train = load_split_data(train_path)
-    x_val, y_val = load_split_data(valid_path)
-
-    model = Model()
-    model.create_network([
-        Dense(input_shape, 5, activation='relu'),
-        Dense(5, output_shape, activation='sigmoid')
-        ])
-
-    model_history = model.fit(
-            x_train, y_train, validation_data=(x_val, y_val), 
-            loss='binary_crossentropy',
-            learning_rate=1e-2,
-            batch_size=5,
-            epochs=30
-    )
-    plot_learning_curves(model_history)
-    if history == True:
-        print("medel's history:\n", model.history)
+    parser.add_argument('--epochs', type=int, default=10,
+                        help='Number of epochs to train')
+    
+    parser.add_argument('--loss', type=str, default='binary_crossentropy',
+                        help='Loss function')
+    
+    parser.add_argument('--batch_size', type=int, default=30,
+                        help='Batch size for training')
+    
+    parser.add_argument('--learning_rate', type=float, default=1e-3,
+                        help='Learning rate for optimizer')
+    return parser
 
 if __name__ == "__main__":
     train_path = config.data_dir + config.train_path 
@@ -251,37 +73,60 @@ if __name__ == "__main__":
     except:
             description = "multilayer perceptron"
 
-    parser = argparse.ArgumentParser(description=description)
-
-    parser.add_argument("-s", "--split", type=str, default=None,
-                        help="Split dataset into train and validation sets.")
-
-    parser.add_argument("-t", "--train", action="store_true", default=False,
-                        help="Train with dataset.")
-
-    parser.add_argument("-p", "--predict", action="store_true", default=False,
-                        help="Predict using saved model.")
-
-    parser.add_argument("-c", "--compare", type=str, default=None, nargs='?', choices=["models", "optimizers"],
-                        help="Compare models by plotting learning curves.")
-
+    parser = set_argparse()
     args = parser.parse_args()
+
+    x_train, y_train = load_split_data(train_path)
+    x_val, y_val = load_split_data(valid_path)
+
+    trainer = ModelTrainer(input_shape, output_shape, train_path, valid_path)
+    plotter = ModelPlotter()
+
+    histories, model_names = [], []
+    params = None
+
+    if args.params:
+        params = load_config(args.params)
+        #print(params)
 
     if args.split:
         split_dataset_save(args.split, train_path, valid_path, train_size=0.8, random_state=42)
+
     elif args.train:
-        train_model(input_shape, output_shape)
+        model = trainer.create(params)
+        optimizer_list = []
+        print(len(trainer.model_list))
+        for _ in range(len(trainer.model_list)):
+            optimizer_list.append(optimizers.SGD(learning_rate=1e-3))
+        histories, model_names = trainer.train(
+                                trainer.model_list,
+                                x_train, 
+                                y_train, 
+                                optimizer_list,
+                                loss=args.loss,
+                                metrics=['accuracy', 'Precision', 'Recall'],
+                                batch_size=args.batch_size, 
+                                epochs=args.epochs, 
+                                validation_data=(x_val, y_val),
+                )
+        if isinstance(model, Model):
+            model.save_model()
+
     elif args.predict:
         prediction()
-    elif args.compare == "models":
-        multiple_models_test()
+
     elif args.compare == "optimizers":
-        optimizer_test()
-    elif args.compare == "same":
-        same_model_test()
+        histories, model_names = trainer.optimizer_test()
+
     elif args.compare == "early stopping":
-        bonus_test()
+        trainer.bonus_test()
+
     elif args.compare == "history":
-        bonus_test(True)
+        trainer.bonus_test(True)
     else:
         print(f"Usage: python {sys.argv[0]} -h")
+
+    if histories and model_names:
+        plotter.set_model_histories(histories)
+        plotter.set_model_names(model_names)
+        plotter.plot()
