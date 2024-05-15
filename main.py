@@ -8,6 +8,7 @@ from Model import Model
 from ModelPlotter import ModelPlotter
 from ModelTrainer import ModelTrainer
 from srcs.utils import load_config, load_split_data, load_weights
+import srcs.losses as losses
 
 
 def prediction():
@@ -103,13 +104,14 @@ if __name__ == "__main__":
                                 y_train, 
                                 optimizer_list,
                                 loss=args.loss,
+                                # loss=losses.CrossEntropy(),
                                 metrics=['accuracy', 'Precision', 'Recall'],
                                 batch_size=args.batch_size, 
                                 epochs=args.epochs, 
                                 validation_data=(x_val, y_val),
                 )
-        if isinstance(model, Model):
-            model.save_model()
+        # if isinstance(model, Model):
+        #     model.save_model()
 
     elif args.predict:
         prediction()

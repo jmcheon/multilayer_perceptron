@@ -81,22 +81,12 @@ class ModelTrainer():
             epochs=1, 
             validation_data=None,
         ):
+        """
+        """
         if len(model_list) == 0:
             raise RuntimeError("You must create your model before training. Use `create(model_params)")
         elif len(model_list) != len(optimizer_list):
             raise RuntimeError("The number of Optimizers doesn't match with model's")
-        elif len(model_list) == 1:
-            histories, model_names = self.train_model(
-                    model_list[0],
-                    x_train, 
-                    y_train, 
-                    optimizer_list[0],
-                    loss, 
-                    metrics,
-                    batch_size, 
-                    epochs, 
-                    validation_data,
-                    )
         else:
             histories, model_names = self.train_models(
                     model_list,
@@ -123,6 +113,9 @@ class ModelTrainer():
             epochs=1, 
             validation_data=None,
         ):
+        """
+        Train one model
+        """
 
         model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
     
@@ -149,6 +142,9 @@ class ModelTrainer():
             epochs=1, 
             validation_data=None,
         ):
+        """
+        Train multiple models
+        """
         histories = []
         model_names = []
         for (model, optimizer) in zip(model_list, optimizer_list):

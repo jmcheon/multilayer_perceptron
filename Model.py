@@ -5,8 +5,8 @@ import numpy as np
 import config
 import srcs.optimizers as optimizers
 from srcs.layers import Dense, Layer
-from srcs.losses import (binary_crossentropy, binary_crossentropy_derivative,
-                         binary_crossentropy_elem)
+from srcs.losses import binary_crossentropy, binary_crossentropy_derivative
+import srcs.losses as losses
 from srcs.metrics import (accuracy_score, f1_score, precision_score,
                           recall_score)
 from srcs.utils import convert_to_binary_pred
@@ -164,6 +164,11 @@ class Model():
         elif loss == 'mse':
             self.loss = mse
             self.loss_prime = mse_derivative
+            self.history['loss'] = []
+        elif isinstance(loss, losses.Loss):
+            print("loss is a class")
+            self.loss = loss.loss
+            self.loss_prime = loss.loss_derivative
             self.history['loss'] = []
 
         if metrics:
