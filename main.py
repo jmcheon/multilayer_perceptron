@@ -80,7 +80,7 @@ if __name__ == "__main__":
     x_train, y_train = load_split_data(train_path)
     x_val, y_val = load_split_data(valid_path)
 
-    trainer = ModelTrainer(input_shape, output_shape, train_path, valid_path)
+    trainer = ModelTrainer()
     plotter = ModelPlotter()
 
     histories, model_names = [], []

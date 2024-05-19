@@ -1,7 +1,7 @@
 
-data_dir = './datasets/'
+data_dir = './datasets/WDBC/' # './datasets/PATH_TO_DATASET/'
 weights_dir = './weights/'
-models_dir = './models/'
+models_dir = './topologies/'
 
 #[SAVED MODEL]
 weights_path = 'saved_model_weights.npy'

@@ -11,11 +11,7 @@ from srcs.utils import (load_config, load_split_data, load_weights,
 
 
 class ModelTrainer():
-    def __init__(self, input_shape, output_shape, train_path, valid_path):
-        self.input_shape = input_shape
-        self.output_shape = output_shape
-        self.train_path = train_path
-        self.valid_path = valid_path
+    def __init__(self):
         self.model_list = []
 
     def create(self, model_params):
