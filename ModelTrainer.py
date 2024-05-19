@@ -117,12 +117,18 @@ class ModelTrainer():
     
         histories = []
         model_names = []
-        history = model.fit(
+        # print('x_train shape :', x_train.shape)
+        # print('y_train shape :', y_train.shape)
+        for epoch in range(epochs):
+
+            history = model.fit(
                 x_train, y_train, validation_data=validation_data, 
                 batch_size=batch_size, 
-                epochs=epochs
-        )
-        histories.append(history)
+                epoch=epoch,
+                epochs=epochs)
+
+            histories.append(history)
+
         model_names.append(f"{model.name} + {model.optimizer.name}")
         return histories, model_names
 

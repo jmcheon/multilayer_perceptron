@@ -201,81 +201,77 @@ class Model():
             x_train, 
             y_train, 
             batch_size, 
-            epochs=1, 
+            epoch,
+            epochs,
             validation_data=None):
         if self._is_compiled == False:
             raise RuntimeError("You must compile your model before training/testing. Use `model.compile(optimizer, loss)")
-        patience=5
         best_loss = float('inf')
         counter = 0
 
-        print('x_train shape :', x_train.shape)
-        print('y_train shape :', y_train.shape)
         if validation_data:
             if not isinstance(validation_data, tuple):
                 raise TypeError("tuple validation_data is needed.")
             x_val = validation_data[0]
             y_val = validation_data[1]
-            self.history['val_loss'] = []
-            for metric in self.metrics:
-                self.history[f"val_{metric.lower()}"] = []
-            print('x_valid shape :', x_val.shape)
+            if 'val_loss' not in self.history:
+                self.history['val_loss'] = []
+                for metric in self.metrics:
+                    self.history[f"val_{metric.lower()}"] = []
+            # print('x_valid shape :', x_val.shape)
     
-        for epoch in range(epochs):
-            total_loss = 0
-            n_batches = 0
+        total_loss = 0
+        n_batches = 0
 
-            y_train_batch = np.empty((0, y_train.shape[1]))
-            binary_predictions = np.empty((0, y_train.shape[1]))
-            for x_batch, y_batch in self.create_mini_batches(x_train, y_train, batch_size):
-                y_pred = self.forward(x_batch)
+        y_train_batch = np.empty((0, y_train.shape[1]))
+        binary_predictions = np.empty((0, y_train.shape[1]))
+        for x_batch, y_batch in self.create_mini_batches(x_train, y_train, batch_size):
+            y_pred = self.forward(x_batch)
 
-                y_train_batch = np.vstack((y_train_batch, y_batch))
-                binary_predictions = np.vstack((binary_predictions, convert_to_binary_pred(y_pred)))
+            y_train_batch = np.vstack((y_train_batch, y_batch))
+            binary_predictions = np.vstack((binary_predictions, convert_to_binary_pred(y_pred)))
 
-                total_loss += self.loss(y_batch, y_pred)
-                self.backprop(y_batch, y_pred)
+            total_loss += self.loss(y_batch, y_pred)
+            self.backprop(y_batch, y_pred)
 
-                n_batches += 1
+            n_batches += 1
 
-            total_loss /= n_batches
+        total_loss /= n_batches
 
-            padding_width = len(str(epochs))
-            print(f'\nEpoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f}', end="")
-            self.history['loss'].append(total_loss)
+        padding_width = len(str(epochs))
+        print(f'\nEpoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f}', end="")
+        self.history['loss'].append(total_loss)
     
-            accuracy, _, _, _ = self.update_history(y_train_batch, binary_predictions)
+        accuracy, _, _, _ = self.update_history(y_train_batch, binary_predictions)
 
-            # Calculate validation loss and accuracy
-            if validation_data:
-                val_loss = 0
-                n_val_batches = 0
+        # Calculate validation loss and accuracy
+        if validation_data:
+            val_loss = 0
+            n_val_batches = 0
 
-                y_val_batch = np.empty((0, y_val.shape[1]))
-                val_binary_predictions = np.empty((0, y_val.shape[1]))
-                for x_batch, y_batch in self.create_mini_batches(x_val, y_val, batch_size):
-                    y_val_pred = self.forward(x_batch)
+            y_val_batch = np.empty((0, y_val.shape[1]))
+            val_binary_predictions = np.empty((0, y_val.shape[1]))
+            for x_batch, y_batch in self.create_mini_batches(x_val, y_val, batch_size):
+                y_val_pred = self.forward(x_batch)
 
-                    y_val_batch = np.vstack((y_val_batch, y_batch))
-                    val_binary_predictions = np.vstack((val_binary_predictions, convert_to_binary_pred(y_val_pred)))
-                    val_loss += self.loss(y_batch, y_val_pred)
-                    n_val_batches += 1
+                y_val_batch = np.vstack((y_val_batch, y_batch))
+                val_binary_predictions = np.vstack((val_binary_predictions, convert_to_binary_pred(y_val_pred)))
+                val_loss += self.loss(y_batch, y_val_pred)
+                n_val_batches += 1
 
-                val_loss /= n_val_batches
-                self.history['val_loss'].append(val_loss)
-                print(f' - val_loss: {val_loss:.4f}', end="")
+            val_loss /= n_val_batches
+            self.history['val_loss'].append(val_loss)
+            print(f' - val_loss: {val_loss:.4f}', end="")
     
-                val_accuracy, _, _, _ = self.update_history(y_val_batch, val_binary_predictions, True)
+            val_accuracy, _, _, _ = self.update_history(y_val_batch, val_binary_predictions, True)
 
-                # Check if validation loss is decreasing
-                if val_loss < best_loss:
-                    best_loss = val_loss
-                    counter = 0
-                else:
-                    counter += 1
-    
-    
-            '''
+            # Check if validation loss is decreasing
+            if val_loss < best_loss:
+                best_loss = val_loss
+                counter = 0
+            else:
+                counter += 1
+        '''
             # Stop early if the validation loss hasn't improved for 'patience' epochs
             if counter >= patience:
                 print(f"Early stopping at epoch {epoch}.")
@@ -285,7 +281,7 @@ class Model():
         if val_accuracy:
             print('\nValidation accuracy:', val_accuracy)
             '''
-        print()
+        # print()
         return self
 
     def predict(self, x_test, y_test):
