@@ -3,8 +3,14 @@
 
 | Requirements | Skills |
 |--------------|--------|
-| - `python3.7`<br> - `numpy`<br> - `pandas`<br> - `matplotlib`<br>  | - `DB & Data`<br> - `Algorithms & AI` |
+| - `python3.11`<br> - `numpy`<br> - `pandas`<br> - `matplotlib`<br>  | - `DB & Data`<br> - `Algorithms & AI` |
 
+</br>
+
+## Project Overview
+This project is based on the multilayer perceptron from 42 Paris, and I have added more functionalities. For those who want to refer to this project within the scope of 42, here is the link to the [multilayer perceptron - 42 Project](https://github.com/jmcheon/multilayer_perceptron/tree/42v2.0).
+
+</br>
 
 ## 1. Dataset
 
@@ -52,6 +58,7 @@ Missing attribute values: none
 
 Class distribution: 357 benign, 212 malignant
 
+</br>
 
 ## 2. Implementation
 
@@ -93,6 +100,7 @@ network = model.create_network([
 Train accuracy: 0.9845 Validation accuracy: 0.9912
 
 ---
+
 ### Comparing models - 3 models of different neural networks
 
 ``` python
