@@ -2,7 +2,6 @@ import numpy as np
 
 def initialize_weights(outs, ins):
     return np.zeros((outs, ins))
-    return np.random.default_rng().normal(loc=0, scale=1/(nrows * ncols), size=(nrows, ncols))
 
 def initialize_bias(outs):
     """create a column vector as a matrix"""

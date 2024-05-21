@@ -1,0 +1,20 @@
+[
+  {
+    "type": "Dense",
+    "shape": [784, 16],
+    "activation": "relu",
+    "weights_initializer": "glorot_uniform"
+  },
+  {
+    "type": "Dense",
+    "shape": [16, 16],
+    "activation": "relu",
+    "weights_initializer": "glorot_uniform"
+  },
+  {
+    "type": "Dense",
+    "shape": [16, 10],
+    "activation": "sigmoid",
+    "weights_initializer": "glorot_uniform"
+  }
+]

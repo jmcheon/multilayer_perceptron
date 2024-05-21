@@ -3,6 +3,8 @@ import sys
 
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
+
 
 
 def load_weights(filename):
@@ -42,24 +44,6 @@ def convert_to_binary_pred(y_pred, threshold=0.5):
     binary_pred = (y_pred > threshold).astype(int)
     return binary_pred
 
-class StandardScaler:
-    def __init__(self):
-        self.mean = None
-        self.scale = None
-
-    def fit(self, X):
-        self.mean = np.mean(X, axis=0)
-        self.scale = np.std(X, axis=0)
-        return self
-
-    def transform(self, X):
-        if self.mean is None or self.scale is None:
-            raise ValueError("fit method must be called before transform")
-        return (X - self.mean) / self.scale
-
-    def fit_transform(self, X):
-        return self.fit(X).transform(X)
-
 def split_dataset_save(filename, train_file, val_file, train_size=0.8, random_state=None):
     df = load_df(filename)
 
@@ -78,8 +62,8 @@ def split_dataset_save(filename, train_file, val_file, train_size=0.8, random_st
 def data_spliter(data, proportion, random_state=None):
     for v in [data]:
         if not isinstance(v, np.ndarray):
-    	    print(f"Invalid input: argument {v} of ndarray type required")	
-    	    return None
+            print(f"Invalid input: argument {v} of ndarray type required")	
+            return None
     
     if not isinstance(proportion, float):
         print(f"Invalid input: argument proportion of float type required")	
@@ -97,13 +81,18 @@ def data_spliter(data, proportion, random_state=None):
 def load_df(filename):
     try:
         df = pd.read_csv(filename, header=None)
+    except FileNotFoundError as e:
+        print(f"File not found: {e}")
+        return None
     except:
-        print(f"Invalid file error.")
+        print(f"Invalid file error: {filename}")
         sys.exit()
     return df
 
 def load_split_data(filename):
     df = load_df(filename)
+    if df is None:
+        return None, None
 
     df[1] = df[1].map({"M": 1, "B": 0})
     y = df[1].values
