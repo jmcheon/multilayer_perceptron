@@ -179,9 +179,9 @@ class Model():
         self._is_compiled = True
         return
 
-    def update_history(self, y_true, y_pred, validation=False):
+    def update_history(self, y_true, y_pred, validation_data=None):
         accuracy, precision, recall, f1 = self.evaluate_metrics(y_true, y_pred)
-        if validation:
+        if validation_data:
             valid = "val_"
         else:
             valid = ""
@@ -212,8 +212,7 @@ class Model():
         if validation_data:
             if not isinstance(validation_data, tuple):
                 raise TypeError("tuple validation_data is needed.")
-            x_val = validation_data[0]
-            y_val = validation_data[1]
+            x_val, y_val = validation_data
             if 'val_loss' not in self.history:
                 self.history['val_loss'] = []
                 for metric in self.metrics:
@@ -246,32 +245,21 @@ class Model():
 
         # Calculate validation loss and accuracy
         if validation_data:
-            val_loss = 0
-            n_val_batches = 0
+            y_val_pred = self.forward(x_val)
+            val_loss = self.loss(y_val, y_val_pred)
 
-            y_val_batch = np.empty((0, y_val.shape[1]))
-            val_binary_predictions = np.empty((0, y_val.shape[1]))
-            for x_batch, y_batch in self.create_mini_batches(x_val, y_val, batch_size):
-                y_val_pred = self.forward(x_batch)
-
-                y_val_batch = np.vstack((y_val_batch, y_batch))
-                val_binary_predictions = np.vstack((val_binary_predictions, convert_to_binary_pred(y_val_pred)))
-                val_loss += self.loss(y_batch, y_val_pred)
-                n_val_batches += 1
-
-            val_loss /= n_val_batches
             self.history['val_loss'].append(val_loss)
             print(f' - val_loss: {val_loss:.4f}', end="")
     
-            val_accuracy, _, _, _ = self.update_history(y_val_batch, val_binary_predictions, True)
+            val_accuracy, _, _, _ = self.update_history(y_val, convert_to_binary_pred(y_val_pred), validation_data)
 
+        '''
             # Check if validation loss is decreasing
             if val_loss < best_loss:
                 best_loss = val_loss
                 counter = 0
             else:
                 counter += 1
-        '''
             # Stop early if the validation loss hasn't improved for 'patience' epochs
             if counter >= patience:
                 print(f"Early stopping at epoch {epoch}.")
