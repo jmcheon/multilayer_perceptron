@@ -120,12 +120,13 @@ class ModelTrainer():
         # print('x_train shape :', x_train.shape)
         # print('y_train shape :', y_train.shape)
         for epoch in range(epochs):
+            padding_width = len(str(epochs))
+            print(f'\nEpoch {epoch + 1:0{padding_width}d}/{epochs}', end="")
 
             history = model.fit(
                 x_train, y_train, validation_data=validation_data, 
-                batch_size=batch_size, 
-                epoch=epoch,
-                epochs=epochs)
+                batch_size=batch_size)
+
 
             histories.append(history)
 

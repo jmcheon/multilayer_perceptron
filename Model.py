@@ -185,6 +185,7 @@ class Model():
             valid = "val_"
         else:
             valid = ""
+        print(f' - {valid}loss: {self.history[f"{valid}loss"][-1]:.4f}', end="")
         if 'accuracy' in self.metrics:
             self.history[valid + 'accuracy'].append(accuracy)
             print(f" - {valid}accuracy: {accuracy:.2f}%", end="")
@@ -198,17 +199,37 @@ class Model():
         return accuracy, precision, recall, f1
 
     def fit(self, 
-            x_train, 
-            y_train, 
+            x, 
+            y, 
             batch_size, 
-            epoch,
-            epochs,
             validation_data=None):
         if self._is_compiled == False:
             raise RuntimeError("You must compile your model before training/testing. Use `model.compile(optimizer, loss)")
         best_loss = float('inf')
         counter = 0
 
+        total_loss = 0
+        n_batches = 0
+
+        y_train_batch = np.empty((0, y.shape[1]))
+        binary_predictions = np.empty((0, y.shape[1]))
+        for x_batch, y_batch in self.create_mini_batches(x, y, batch_size):
+            y_pred = self.forward(x_batch)
+
+            y_train_batch = np.vstack((y_train_batch, y_batch))
+            binary_predictions = np.vstack((binary_predictions, convert_to_binary_pred(y_pred)))
+
+            total_loss += self.loss(y_batch, y_pred)
+            n_batches += 1
+            self.backprop(y_batch, y_pred)
+
+
+        total_loss /= n_batches
+        self.history['loss'].append(total_loss)
+        accuracy, _, _, _ = self.update_history(y_train_batch, binary_predictions)
+
+
+        # Calculate validation loss and accuracy
         if validation_data:
             if not isinstance(validation_data, tuple):
                 raise TypeError("tuple validation_data is needed.")
@@ -218,39 +239,10 @@ class Model():
                 for metric in self.metrics:
                     self.history[f"val_{metric.lower()}"] = []
             # print('x_valid shape :', x_val.shape)
-    
-        total_loss = 0
-        n_batches = 0
 
-        y_train_batch = np.empty((0, y_train.shape[1]))
-        binary_predictions = np.empty((0, y_train.shape[1]))
-        for x_batch, y_batch in self.create_mini_batches(x_train, y_train, batch_size):
-            y_pred = self.forward(x_batch)
-
-            y_train_batch = np.vstack((y_train_batch, y_batch))
-            binary_predictions = np.vstack((binary_predictions, convert_to_binary_pred(y_pred)))
-
-            total_loss += self.loss(y_batch, y_pred)
-            self.backprop(y_batch, y_pred)
-
-            n_batches += 1
-
-        total_loss /= n_batches
-
-        padding_width = len(str(epochs))
-        print(f'\nEpoch {epoch + 1:0{padding_width}d}/{epochs} - loss: {total_loss:.4f}', end="")
-        self.history['loss'].append(total_loss)
-    
-        accuracy, _, _, _ = self.update_history(y_train_batch, binary_predictions)
-
-        # Calculate validation loss and accuracy
-        if validation_data:
             y_val_pred = self.forward(x_val)
             val_loss = self.loss(y_val, y_val_pred)
-
             self.history['val_loss'].append(val_loss)
-            print(f' - val_loss: {val_loss:.4f}', end="")
-    
             val_accuracy, _, _, _ = self.update_history(y_val, convert_to_binary_pred(y_val_pred), validation_data)
 
         '''
@@ -269,7 +261,6 @@ class Model():
         if val_accuracy:
             print('\nValidation accuracy:', val_accuracy)
             '''
-        # print()
         return self
 
     def predict(self, x_test, y_test):
