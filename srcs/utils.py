@@ -40,9 +40,9 @@ def one_hot_encode_binary_labels(labels):
 
     return one_hot_encoded_labels
 
-def convert_to_binary_pred(y_pred, threshold=0.5):
-    binary_pred = (y_pred > threshold).astype(int)
-    return binary_pred
+def convert_to_binary_pred(a, threshold=0.5):
+    y_pred = (a > threshold).astype(int)
+    return y_pred
 
 def split_dataset_save(filename, train_file, val_file, train_size=0.8, random_state=None):
     df = load_df(filename)

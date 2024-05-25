@@ -3,6 +3,7 @@ import json
 import sys
 
 import config
+from srcs.metrics import accuracy_score
 import srcs.optimizers as optimizers
 from Model import Model
 from ModelPlotter import ModelPlotter
@@ -24,7 +25,9 @@ def prediction():
     model = Model()
     model.create_network(config_data)
     model.set_weights(list(weights))
-    model.predict(x, y)
+    y_pred = model.predict(x)
+    accuracy = accuracy_score(y, y_pred)
+    print('\nAccuracy:', accuracy)
 
 def set_argparse():
     parser = argparse.ArgumentParser(description=description)

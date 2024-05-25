@@ -212,21 +212,21 @@ class Model():
         n_batches = 0
 
         y_train_batch = np.empty((0, y.shape[1]))
-        binary_predictions = np.empty((0, y.shape[1]))
+        y_pred = np.empty((0, y.shape[1]))
         for x_batch, y_batch in self.create_mini_batches(x, y, batch_size):
-            y_pred = self.forward(x_batch)
+            a = self.forward(x_batch)
 
             y_train_batch = np.vstack((y_train_batch, y_batch))
-            binary_predictions = np.vstack((binary_predictions, convert_to_binary_pred(y_pred)))
+            y_pred = np.vstack((y_pred, convert_to_binary_pred(a)))
 
-            total_loss += self.loss(y_batch, y_pred)
+            total_loss += self.loss(y_batch, a)
             n_batches += 1
-            self.backprop(y_batch, y_pred)
+            self.backprop(y_batch, a)
 
 
         total_loss /= n_batches
         self.history['loss'].append(total_loss)
-        accuracy, _, _, _ = self.update_history(y_train_batch, binary_predictions)
+        accuracy, _, _, _ = self.update_history(y_train_batch, y_pred)
 
 
         # Calculate validation loss and accuracy
@@ -240,10 +240,10 @@ class Model():
                     self.history[f"val_{metric.lower()}"] = []
             # print('x_valid shape :', x_val.shape)
 
-            y_val_pred = self.forward(x_val)
-            val_loss = self.loss(y_val, y_val_pred)
+            val_a = self.forward(x_val)
+            val_loss = self.loss(y_val, val_a)
             self.history['val_loss'].append(val_loss)
-            val_accuracy, _, _, _ = self.update_history(y_val, convert_to_binary_pred(y_val_pred), validation_data)
+            val_accuracy, _, _, _ = self.update_history(y_val, convert_to_binary_pred(val_a), validation_data)
 
         '''
             # Check if validation loss is decreasing
@@ -263,10 +263,8 @@ class Model():
             '''
         return self
 
-    def predict(self, x_test, y_test):
-        y_pred = self.forward(x_test)
-        #error = binary_cross_entropy_elem(y_test, y_pred)
+    def predict(self, x_test):
+        A = self.forward(x_test)
+        #error = binary_cross_entropy_elem(y_test, A)
         #print('loss:', error[:,0])
-        accuracy = accuracy_score(y_test, convert_to_binary_pred(y_pred))
-        print('\nAccuracy:', accuracy)
-        return y_pred
+        return convert_to_binary_pred(A) 
