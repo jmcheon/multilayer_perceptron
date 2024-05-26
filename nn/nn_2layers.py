@@ -98,7 +98,7 @@ def update(gradients, parameters, lr):
     }
     return parameters
 
-def nn(x_train, y_train, n1, x_test=None, y_test=None, lr=0.01, epochs=100):
+def nn(x_train, y_train, n1, x_test=None, y_test=None, lr=0.01, epochs=100, plot_graph=False):
 
     n0 = x_train.shape[0]
     n2 = y_train.shape[0]
@@ -130,17 +130,17 @@ def nn(x_train, y_train, n1, x_test=None, y_test=None, lr=0.01, epochs=100):
                 # accuracy
                 y_pred = predict(x_test, parameters)
                 test_acc.append(accuracy_score(y_test.flatten(), y_pred.flatten()))
-
-    plt.figure(figsize=(12, 4))
-    plt.subplot(1, 2, 1)
-    plt.plot(train_loss, label="train loss")
-    plt.plot(test_loss , label="test loss")
-    plt.legend()
-    plt.subplot(1, 2, 2)
-    plt.plot(train_acc, label="train_acc")
-    plt.plot(test_acc, label="test_acc")
-    plt.legend()
-    plt.show()
+    if plot_graph:
+        plt.figure(figsize=(12, 4))
+        plt.subplot(1, 2, 1)
+        plt.plot(train_loss, label="train loss")
+        plt.plot(test_loss , label="test loss")
+        plt.legend()
+        plt.subplot(1, 2, 2)
+        plt.plot(train_acc, label="train_acc")
+        plt.plot(test_acc, label="test_acc")
+        plt.legend()
+        plt.show()
 
     return parameters, train_loss, train_acc
 

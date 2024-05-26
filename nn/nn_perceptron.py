@@ -42,7 +42,7 @@ def predict(X, W, b):
     return (A >= 0.5).astype(int)
 
 
-def nn(x_train, y_train, x_test=None, y_test=None, lr=0.01, epochs=1000):
+def nn(x_train, y_train, x_test=None, y_test=None, lr=0.01, epochs=1000, plot_graph=False):
     W = initialize_weights(x_train)
     b = initialize_bias()
 
@@ -70,17 +70,17 @@ def nn(x_train, y_train, x_test=None, y_test=None, lr=0.01, epochs=1000):
                 # accuracy
                 y_pred = predict(x_test, W, b)
                 test_acc.append(accuracy_score(y_test, y_pred))
-
-    plt.figure(figsize=(12, 4))
-    plt.subplot(1, 2, 1)
-    plt.plot(train_loss, label="train loss")
-    plt.plot(test_loss , label="test loss")
-    plt.legend()
-    plt.subplot(1, 2, 2)
-    plt.plot(train_acc, label="train_acc")
-    plt.plot(test_acc, label="test_acc")
-    plt.legend()
-    plt.show()
+    if plot_graph:
+        plt.figure(figsize=(12, 4))
+        plt.subplot(1, 2, 1)
+        plt.plot(train_loss, label="train loss")
+        plt.plot(test_loss , label="test loss")
+        plt.legend()
+        plt.subplot(1, 2, 2)
+        plt.plot(train_acc, label="train_acc")
+        plt.plot(test_acc, label="test_acc")
+        plt.legend()
+        plt.show()
 
     return W, b, train_loss, train_acc
 
