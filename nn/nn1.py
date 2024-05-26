@@ -1,7 +1,7 @@
 import numpy as np
 
 def initialize_weights(outs, ins):
-    return np.random.default_rng().normal(loc=0, scale=1/(outs * ins),l size=(outs, ins))
+    return np.random.default_rng().normal(loc=0, scale=1/(outs * ins), size=(outs, ins))
     # return np.zeros((outs, ins))
 
 def initialize_bias(outs):
