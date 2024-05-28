@@ -62,29 +62,41 @@ class NeuralNet:
             out = layer.forward(out)
         return out
 
+    def predict(self, x):
+        a = self.forward(x)
+        # return (a >= 0.5).astype(int)
+        return np.argmax(a, axis=0)
+
     def loss(self, y_pred, y):
         return self._loss_function.loss(y_pred, y)
 
-    def train(self, x, t):
-        """
-        Train the network on input x and expected output t.
-        """
-        # Accumulate intermediate results during forward pass.
-        xs = [x]
-        for layer in self._layers:
-            xs.append(layer.forward(xs[-1]))
-
-        # x = xs.pop()
-        # print("x in net train:", x)
-        dx = self._loss_function.dloss(xs.pop(), t)
-        for layer, x in zip(self._layers[::-1], xs[::-1]):
+    def backward(self, a, y):
+        dz = a.pop() - y
+        m = y.shape[1]
+        n_layers = len(self._layers)
+        # print("m examples:", m)
+        for i, (layer, a) in enumerate(zip(self._layers[::-1], a[::-1])):
 
             # Compute the derivatives
-            y = np.dot(layer._W, x) + layer._b
-            db = layer.act_function.df(y) * dx
-            dx = np.dot(layer._W.T, db)
-            dW = np.dot(db, x.T)
+            # print(i)
+            dW = 1 / m * np.dot(dz, a.T)
+            db = 1 / m * np.sum(dz, axis=1, keepdims=True)
+            if i < n_layers: 
+                dz = np.dot(layer._W.T, dz) * a * (1 - a)
 
             # Update parameters
             layer._W -= self.lr * dW
             layer._b -= self.lr * db
+
+
+    def fit(self, x, y):
+        """
+        Train the network on input x and expected output y.
+        """
+        # activations during forward pass
+        a = [x]
+        for layer in self._layers:
+            a.append(layer.forward(a[-1]))
+
+        # backpropagation
+        self.backward(a, y)

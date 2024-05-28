@@ -23,7 +23,7 @@ class MSELoss(Loss):
 class CrossEntropyLoss(Loss):
     def loss(self, y_pred, y):
         # predicted should be a probability distribution (output of softmax)
-        return -np.sum(y * np.log(y_pred))
+        return -np.mean(y * np.log(y_pred))
 
     def dloss(self, y_pred, y):
         # Gradient of the loss with respect to the predicted values
@@ -38,7 +38,7 @@ class BCELoss(Loss):
         # Ensure predicted is a single probability value
         y_pred = np.clip(y_pred, self.eps, 1 - self.eps)
 
-        return - (y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))
+        return - np.mean(y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))
 
     def dloss(self, y_pred, y):
         # Gradient of the loss with respect to the predicted value
