@@ -4,7 +4,7 @@ weights_dir = './weights/'
 models_dir = './topologies/'
 
 #[SAVED MODEL]
-weights_path = 'saved_model_weights.npy'
+weights_path = 'saved_model_weights'
 config_path = 'saved_model_config.json'
 
 #[TENSORFLOW WEIGHTS]

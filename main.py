@@ -8,7 +8,7 @@ import srcs.optimizers as optimizers
 from Model import Model
 from ModelPlotter import ModelPlotter
 from ModelTrainer import ModelTrainer
-from srcs.utils import load_config, load_split_data, load_weights
+from srcs.utils import load_config, load_split_data, load_weights, one_hot_encode_labels
 import srcs.losses as losses
 
 
@@ -26,6 +26,8 @@ def prediction():
     model.create_network(config_data)
     model.set_weights(list(weights))
     y_pred = model.predict(x)
+    y = one_hot_encode_labels(y, 2)
+    # print(y.shape, y_pred.shape)
     accuracy = accuracy_score(y, y_pred)
     print('\nAccuracy:', accuracy)
 
@@ -106,15 +108,15 @@ if __name__ == "__main__":
                                 x_train, 
                                 y_train, 
                                 optimizer_list,
-                                loss=args.loss,
-                                # loss=losses.CrossEntropy(),
+                                # loss=args.loss,
+                                loss=losses.CrossEntropyLoss(),
                                 metrics=['accuracy', 'Precision', 'Recall'],
                                 batch_size=args.batch_size, 
                                 epochs=args.epochs, 
                                 validation_data=(x_val, y_val),
                 )
-        # if isinstance(model, Model):
-        #     model.save_model()
+        if isinstance(model, Model):
+            model.save_model()
 
     elif args.predict:
         prediction()

@@ -23,17 +23,17 @@ class Layer:
         elif weights_initializer == 'he_uniform':
             self.weights = initializers.he_uniform((input_shape, output_shape))
             self.weights_initializer = 'he_uniform'
-            self.bias = initializers.he_uniform(output_shape)
+            self.bias = initializers.he_uniform((1, output_shape))
         elif weights_initializer == 'random':
             self.weights = np.random.randn(input_shape, output_shape)
             self.weights_initializer = 'random'
-            self.bias = np.random.randn(output_shape)
+            self.bias = np.random.randn((1, output_shape))
         elif weights_initializer == 'zeros':
             self.weights = np.zeros((input_shape, output_shape))
             self.weights_initializer = 'zeros'
 
         if bias_initializer == 'zeros':
-            self.bias = np.zeros((output_shape))
+            self.bias = np.zeros((1, output_shape))
 
         # Activation function
         if activation.lower() == 'relu':
@@ -44,6 +44,7 @@ class Layer:
             self.activation_derivative = lambda gradient :activations.sigmoid_derivative(self.outputs, gradient)
         elif activation.lower() == 'softmax':
             self.activation = activations.softmax
+            self.activation_derivative = lambda gradient :activations.softmax_derivative(self.outputs, gradient)
 
 
     def forward(self, x):
@@ -62,8 +63,6 @@ class Dense(Layer):
         ):
         super().__init__(input_shape, output_shape, activation, weights_initializer, bias_initializer)
         self.deltas = None
-        #print(self.bias.shape)
-
 
     def set_weights(self, weights, bias):
         if weights.shape != self.weights.shape:

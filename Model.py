@@ -9,13 +9,14 @@ from srcs.losses import binary_crossentropy, binary_crossentropy_derivative
 import srcs.losses as losses
 from srcs.metrics import (accuracy_score, f1_score, precision_score,
                           recall_score)
-from srcs.utils import convert_to_binary_pred
+from srcs.utils import convert_to_binary_pred, one_hot_encode_labels
 
 
 class Model():
     def __init__(self, name="Model"):
         self._is_compiled = False
         self.layers = None
+        self.n_layers = 0 
         self.optimizer = None
         self.history = {}
         self.metrics = []
@@ -41,6 +42,7 @@ class Model():
                                                 activation=layer_data['activation'],
                                                 weights_initializer=layer_data['weights_initializer']))
             self.layers = layers
+            self.n_layers = len(layers)
         else:
             raise TypeError("Invalid form of input to create a neural network.")
 
@@ -49,7 +51,7 @@ class Model():
 
         return layers
 
-    def save_model(self):
+    def save_model(self) -> None:
         # Save model configuration as a JSON file
         model_config = self.get_network_topology()
         with open(config.models_dir + config.config_path, 'w') as json_file:
@@ -58,7 +60,7 @@ class Model():
         
         # Save model weights as a .npy file
         model_weights = self.get_weights()
-        np.save(config.weights_dir + config.weights_path, model_weights)
+        np.savez(config.weights_dir + config.weights_path, *model_weights)
         print(f"> Saving model weights to '{config.weights_dir + config.weights_path}'")
 
 
@@ -67,25 +69,27 @@ class Model():
             input_data = layer.forward(input_data)
         return input_data
 
-    def backprop(self, y_true, y_pred):
-        grad = self.loss_prime(y_true, y_pred)
+    def backward(self, y_true, y_pred) -> None:
+        loss_gradient = self.loss_prime(y_true, y_pred)
 
         self.optimizer.pre_update_params()
-        total_layers = len(self.layers)
-        for index, layer in enumerate(reversed(self.layers)):
-            layer_num = total_layers - index - 2
-            layer.set_activation_gradient(grad)
-            grad = np.dot(layer.deltas, layer.weights.T)
-            self.optimizer.update_params(layer, self.layers[layer_num].outputs.T)
+        for l in reversed(range(self.n_layers)):
+            # print("dloss:", loss_gradient.shape, l)
+            self.layers[l].set_activation_gradient(loss_gradient)
+            loss_gradient = np.dot(self.layers[l].deltas, self.layers[l].weights.T)
+            if l > 0:
+                self.optimizer.update_params(self.layers[l], self.layers[l - 1].outputs.T)
+            else:
+                self.optimizer.update_params(self.layers[l], self.layers[0].inputs.T)
         self.optimizer.post_update_params()
 
-    def get_weights(self):
-        weights_and_biases = []
+    def get_weights(self) -> list[np.ndarray]:
+        weights_and_bias = []
         for layer in self.layers:
             if isinstance(layer, Dense):
-                weights_and_biases.append(layer.weights)
-                weights_and_biases.append(layer.bias)
-        return weights_and_biases
+                weights_and_bias.append(layer.weights)
+                weights_and_bias.append(layer.bias)
+        return weights_and_bias
 
     def set_weights(self, initial_weights):
         if not isinstance(initial_weights, list):
@@ -168,7 +172,7 @@ class Model():
         elif isinstance(loss, losses.Loss):
             print("loss is a class")
             self.loss = loss.loss
-            self.loss_prime = loss.loss_derivative
+            self.loss_prime = loss.dloss
             self.history['loss'] = []
 
         if metrics:
@@ -211,22 +215,24 @@ class Model():
         total_loss = 0
         n_batches = 0
 
-        y_train_batch = np.empty((0, y.shape[1]))
-        y_pred = np.empty((0, y.shape[1]))
+        n_classes = len(np.unique(y))
+        y_train_batch = np.empty((0, n_classes))
+        predictions = np.empty((0, n_classes))
         for x_batch, y_batch in self.create_mini_batches(x, y, batch_size):
-            a = self.forward(x_batch)
+            y_batch = one_hot_encode_labels(y_batch, n_classes)
+            y_pred = self.forward(x_batch)
 
             y_train_batch = np.vstack((y_train_batch, y_batch))
-            y_pred = np.vstack((y_pred, convert_to_binary_pred(a)))
+            predictions = np.vstack((predictions, convert_to_binary_pred(y_pred)))
 
-            total_loss += self.loss(y_batch, a)
+            total_loss += self.loss(y_batch, y_pred)
             n_batches += 1
-            self.backprop(y_batch, a)
+            self.backward(y_batch, y_pred)
 
 
         total_loss /= n_batches
         self.history['loss'].append(total_loss)
-        accuracy, _, _, _ = self.update_history(y_train_batch, y_pred)
+        accuracy, _, _, _ = self.update_history(y_train_batch, predictions)
 
 
         # Calculate validation loss and accuracy
@@ -240,10 +246,11 @@ class Model():
                     self.history[f"val_{metric.lower()}"] = []
             # print('x_valid shape :', x_val.shape)
 
-            val_a = self.forward(x_val)
-            val_loss = self.loss(y_val, val_a)
+            val_y_pred = self.forward(x_val)
+            y_val = one_hot_encode_labels(y_val, n_classes)
+            val_loss = self.loss(y_val, val_y_pred)
             self.history['val_loss'].append(val_loss)
-            val_accuracy, _, _, _ = self.update_history(y_val, convert_to_binary_pred(val_a), validation_data)
+            val_accuracy, _, _, _ = self.update_history(y_val, convert_to_binary_pred(val_y_pred), validation_data)
 
         '''
             # Check if validation loss is decreasing
@@ -263,8 +270,8 @@ class Model():
             '''
         return self
 
-    def predict(self, x_test):
-        A = self.forward(x_test)
-        #error = binary_cross_entropy_elem(y_test, A)
+    def predict(self, x, threshold=0.5):
+        y_pred = self.forward(x)
+        #error = binary_cross_entropy_elem(y_test, y_pred)
         #print('loss:', error[:,0])
-        return convert_to_binary_pred(A) 
+        return convert_to_binary_pred(y_pred) 

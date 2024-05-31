@@ -27,9 +27,9 @@ class SGD(Optimizer):
 
     def update_params(self, layer, prev_layer_output):
         dweights = np.dot(prev_layer_output, layer.deltas)
-        dbiases = np.sum(layer.deltas, axis=0, keepdims=True).reshape(-1)
+        dbias = np.sum(layer.deltas, axis=0, keepdims=True)
         '''
-        print('dbiases shape:', dbiases.shape)
+        print('dbias shape:', dbias.shape)
         print('prev_layer_output shape:', prev_layer_output.shape)
         print('layer.deltas shape:', layer.deltas.shape)
         print('dweights shape:', dweights.shape)
@@ -40,7 +40,7 @@ class SGD(Optimizer):
             if not hasattr(layer, 'weight_momentums'):
                 layer.weight_momentums = np.zeros_like(layer.weights)
                 # If there is no momentum array for weights
-                # The array doesn't exist for biases yet either.
+                # The array doesn't exist for bias yet either.
                 layer.bias_momentums = np.zeros_like(layer.bias)
 
             # Build weight updates with momentum - take previous
@@ -54,7 +54,7 @@ class SGD(Optimizer):
             # Build bias updates
             bias_updates = \
                 self.momentum * layer.bias_momentums - \
-                self.current_learning_rate * dbiases
+                self.current_learning_rate * dbias
             layer.bias_momentums = bias_updates
 
         # Vanilla SGD updates (as before momentum update)
@@ -62,7 +62,7 @@ class SGD(Optimizer):
             weight_updates = -self.current_learning_rate * \
                     dweights
             bias_updates = -self.current_learning_rate * \
-                    dbiases
+                    dbias
 
         layer.weights += weight_updates
         layer.bias += bias_updates
@@ -77,7 +77,7 @@ class RMSprop(Optimizer):
 
     def update_params(self, layer, prev_layer_output):
         dweights = np.dot(prev_layer_output, layer.deltas)
-        dbiases = np.sum(layer.deltas, axis=0, keepdims=True).reshape(-1)
+        dbias = np.sum(layer.deltas, axis=0, keepdims=True)
 
         # If layer does not contain cache arrays,
         # create them filled with zeros
@@ -89,7 +89,7 @@ class RMSprop(Optimizer):
         layer.weight_cache = self.rho * layer.weight_cache + \
             (1 - self.rho) * dweights**2
         layer.bias_cache = self.rho * layer.bias_cache + \
-            (1 - self.rho) * dbiases**2
+            (1 - self.rho) * dbias**2
 
         # Vanilla SGD parameter update + normalization
         # with square rooted cache
@@ -97,7 +97,7 @@ class RMSprop(Optimizer):
                          dweights / \
                          (np.sqrt(layer.weight_cache) + self.epsilon)
         layer.bias += -self.current_learning_rate * \
-                        dbiases / \
+                        dbias / \
                         (np.sqrt(layer.bias_cache) + self.epsilon)
 
 class Adam(Optimizer):
@@ -111,7 +111,7 @@ class Adam(Optimizer):
 
     def update_params(self, layer, prev_layer_output):
         dweights = np.dot(prev_layer_output, layer.deltas)
-        dbiases = np.sum(layer.deltas, axis=0, keepdims=True).reshape(-1)
+        dbias = np.sum(layer.deltas, axis=0, keepdims=True)
         # If layer does not contain cache arrays,
         # create them filled with zeros
         if not hasattr(layer, 'weight_cache'):
@@ -126,7 +126,7 @@ class Adam(Optimizer):
                                  (1 - self.beta_1) * dweights
         layer.bias_momentums = self.beta_1 * \
                                layer.bias_momentums + \
-                               (1 - self.beta_1) * dbiases
+                               (1 - self.beta_1) * dbias
         # Get corrected momentum
         # self.iteration is 0 at first pass
         # and we need to start with 1 here
@@ -139,7 +139,7 @@ class Adam(Optimizer):
             (1 - self.beta_2) * dweights**2
 
         layer.bias_cache = self.beta_2 * layer.bias_cache + \
-            (1 - self.beta_2) * dbiases**2
+            (1 - self.beta_2) * dbias**2
         # Get corrected cache
         weight_cache_corrected = layer.weight_cache / \
             (1 - self.beta_2 ** (self.iterations + 1))

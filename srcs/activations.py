@@ -56,13 +56,20 @@ def relu(x):
 def sigmoid(x):
     return 1 / (1 + np.exp(np.clip(-x, -709, 709)))
 
-def softmax(x):
-    exp_x = np.exp(x - np.max(x, axis=0, keepdims=True))
-    return exp_x / np.sum(exp_x, axis=0, keepdims=True)
-
 def sigmoid_derivative(outputs, gradient):
     return gradient * (1 - outputs) * outputs
 
+def softmax(x):
+    exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
+    return exp_x / np.sum(exp_x, axis=1, keepdims=True)
+
+def softmax_derivative(outputs, gradient):
+    dinputs = np.empty_like(gradient)
+    for index, (single_output, single_grad) in enumerate(zip(outputs, gradient)):
+        single_output = single_output.reshape(-1, 1)
+        jacobian_matrix = np.diagflat(single_output) - np.dot(single_output, single_output.T)
+        dinputs[index] = np.dot(jacobian_matrix, single_grad)
+    return dinputs
 
 def relu_derivative(inputs, gradient):
     gradient[inputs <= 0] = 0

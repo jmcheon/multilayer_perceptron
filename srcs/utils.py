@@ -9,7 +9,9 @@ from sklearn.preprocessing import StandardScaler
 
 def load_weights(filename):
     try:
-        weights = np.load(filename, allow_pickle=True)
+        loaded = np.load(filename + '.npz', allow_pickle=True)
+        weights = [loaded[f'arr_{i}'] for i in range(len(loaded.files))]
+
     except:
         print(f"Input file errer: {filename} doesn't exist.")
         sys.exit()
@@ -33,16 +35,18 @@ def load_config(filename):
         sys.exit()
     return config_data
 
-def one_hot_encode_binary_labels(labels):
-    one_hot_encoded_labels = np.zeros((len(labels), 2))
-    for i, label in enumerate(labels):
-        one_hot_encoded_labels[i, int(label)] = 1
+def one_hot_encode_labels(y, n_classes):
+    one_hot_encoded_labels = np.zeros((len(y), n_classes))
+    for i, single_y in enumerate(y):
+        one_hot_encoded_labels[i, int(single_y)] = 1
 
     return one_hot_encoded_labels
 
-def convert_to_binary_pred(a, threshold=0.5):
-    y_pred = (a > threshold).astype(int)
-    return y_pred
+def convert_to_binary_pred(y_pred, threshold=0.5):
+    out = np.argmax(y_pred, axis=1)
+    out = one_hot_encode_labels(out, 2)
+    return out
+    # return (y_pred > threshold).astype(int)
 
 def split_dataset_save(filename, train_file, val_file, train_size=0.8, random_state=None):
     df = load_df(filename)
