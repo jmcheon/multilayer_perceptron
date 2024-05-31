@@ -6,6 +6,7 @@ import config
 from srcs.metrics import accuracy_score
 import srcs.optimizers as optimizers
 from Model import Model
+from NeuralNet import NeuralNet
 from ModelPlotter import ModelPlotter
 from ModelTrainer import ModelTrainer
 from srcs.utils import load_config, load_split_data, load_weights, one_hot_encode_labels
@@ -22,7 +23,8 @@ def prediction():
     config_data = load_config(config_path)
 
 
-    model = Model()
+    model = NeuralNet()
+    # print("Net doc:", model.__doc__)
     model.create_network(config_data)
     model.set_weights(list(weights))
     y_pred = model.predict(x)

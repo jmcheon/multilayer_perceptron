@@ -1,5 +1,5 @@
 [
-  [ 
+  [
     {
       "type": "Dense",
       "shape": [30, 20],
@@ -21,7 +21,7 @@
       "activation": "sigmoid"
     }
   ],
-  [ 
+  [
     {
       "type": "Dense",
       "shape": [30, 20],

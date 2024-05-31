@@ -1,10 +1,6 @@
-import sys
-
-import numpy as np
-
 import config
 import srcs.optimizers as optimizers
-from Model import Model
+from NeuralNet import NeuralNet
 from srcs.layers import Dense
 from srcs.utils import (load_config, load_split_data, load_weights,
                         split_dataset_save)
@@ -29,7 +25,7 @@ class ModelTrainer():
             raise TypeError("Invalid form of input to create a neural network.")
 
     def create_default_model(self):
-        model = Model()
+        model = NeuralNet()
         network = model.create_network([
             Dense(self.input_shape, 20, activation='relu'),
             Dense(20, 10, activation='relu'),
@@ -54,7 +50,7 @@ class ModelTrainer():
     
     
     def create_model(self, params=None):
-        model = Model()
+        model = NeuralNet()
         if params:
             network = model.create_network(params)
         else:

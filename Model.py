@@ -3,30 +3,48 @@ import json
 import numpy as np
 
 import config
-import srcs.optimizers as optimizers
 from srcs.layers import Dense, Layer
-from srcs.losses import binary_crossentropy, binary_crossentropy_derivative
-import srcs.losses as losses
-from srcs.metrics import (accuracy_score, f1_score, precision_score,
-                          recall_score)
-from srcs.utils import convert_to_binary_pred, one_hot_encode_labels
+from srcs.metrics import accuracy_score, f1_score, precision_score, recall_score
 
 
 class Model():
+    """
+    Base Model Class.
+
+    Methods:
+        create_network: Initializes the network architecture.
+        save_model: Saves the model parameters to a file.
+        get_weights: Retrieves the model weights.
+        set_weights: Sets the model weights.
+        get_network_topology: Retrieves the network topology.
+
+        evaluate_metrics: Evaluates specified metrics on the model.
+        create_mini_batch: Creates mini-batches from the training data.
+
+        print_history: Prints the training history.
+        update_history: Updates the training history with new metrics.
+    """
     def __init__(self, name="Model"):
-        self._is_compiled = False
         self.layers = None
         self.n_layers = 0 
-        self.optimizer = None
         self.history = {}
         self.metrics = []
         self.name = name
 
     def create_network(self, net, name=None):
+        """
+        Initializes the network architecture.
+
+        Args:
+            net (list): A list containing model topology.
+        Returns:
+            list: A list containing model topology.
+        """
         layers = None
         if isinstance(net, list) and all(isinstance(layer, Layer) for layer in net):
             layers = net
             self.layers = layers
+            self.n_layers = len(layers)
         elif isinstance(net, list) and all(isinstance(layer_data, dict) for layer_data in net):
             print("Creating a neural network...")
             layers = []
@@ -52,6 +70,9 @@ class Model():
         return layers
 
     def save_model(self) -> None:
+        """
+        Saves the model parameters to a file.
+        """
         # Save model configuration as a JSON file
         model_config = self.get_network_topology()
         with open(config.models_dir + config.config_path, 'w') as json_file:
@@ -63,27 +84,13 @@ class Model():
         np.savez(config.weights_dir + config.weights_path, *model_weights)
         print(f"> Saving model weights to '{config.weights_dir + config.weights_path}'")
 
-
-    def forward(self, input_data):
-        for layer in self.layers:
-            input_data = layer.forward(input_data)
-        return input_data
-
-    def backward(self, y_true, y_pred) -> None:
-        loss_gradient = self.loss_prime(y_true, y_pred)
-
-        self.optimizer.pre_update_params()
-        for l in reversed(range(self.n_layers)):
-            # print("dloss:", loss_gradient.shape, l)
-            self.layers[l].set_activation_gradient(loss_gradient)
-            loss_gradient = np.dot(self.layers[l].deltas, self.layers[l].weights.T)
-            if l > 0:
-                self.optimizer.update_params(self.layers[l], self.layers[l - 1].outputs.T)
-            else:
-                self.optimizer.update_params(self.layers[l], self.layers[0].inputs.T)
-        self.optimizer.post_update_params()
-
     def get_weights(self) -> list[np.ndarray]:
+        """
+        Retrieves the model weights.
+
+        Returns:
+            list: A list containing the model weights.
+        """
         weights_and_bias = []
         for layer in self.layers:
             if isinstance(layer, Dense):
@@ -91,7 +98,16 @@ class Model():
                 weights_and_bias.append(layer.bias)
         return weights_and_bias
 
-    def set_weights(self, initial_weights):
+    def set_weights(self, initial_weights) -> None:
+        """
+        Sets the model weights.
+
+        Args:
+            weights (list): A list containing the new weights.
+
+        Returns:
+            None.
+        """
         if not isinstance(initial_weights, list):
             raise TypeError("Invalid type of initial_weights, a list of weights required.")
         if not len(initial_weights) == 2 * len(self.layers):
@@ -101,7 +117,13 @@ class Model():
             if isinstance(layer, Dense):
                 layer.set_weights(initial_weights[index], initial_weights[index + 1])
 
-    def get_network_topology(self):
+    def get_network_topology(self) -> list:
+        """
+        Retrieves the network topology.
+
+        Returns:
+            list: A list describing the network topology.
+        """
         layers = []
         for layer in self.layers:
             if isinstance(layer, Dense):
@@ -116,14 +138,37 @@ class Model():
                 layers.append(layer_data)
         return layers 
 
-    def print_history(self):
-        if len(self.history) == 0:
-            print("It hasn't trained yet.")
-            return
-        for metric in self.history:
-            print(f"epoch {metric['epoch']} - loss: {metric['loss']} - val_loss: {metric['val_loss']}")
+    def evaluate_metrics(self, y, y_pred):
+        """
+        Evaluates specified metrics on the model.
+
+        Args:
+            y (ndarray): True labels.
+            y_pred (ndarray): Predicted labels.
+
+        Returns:
+            accuracy : The accuracy value.
+            precision : The precision value.
+            recall : The recall value.
+            f1: The f1 score value.
+        """
+        accuracy = accuracy_score(y, y_pred)
+        precision = precision_score(y, y_pred, zero_division=0)
+        recall = recall_score(y, y_pred)
+        f1 = f1_score(y, y_pred)
+
+        return accuracy, precision, recall, f1
 
     def create_mini_batches(self, x, y, batch_size):
+        """
+        Creates mini-batches from the training data.
+
+        Args:
+            x (ndarray): The x training data.
+            y (ndarray): The y training data.
+            batch_size (int): The size of each mini-batch.
+        """
+
         if isinstance(batch_size, str) and batch_size == 'batch':
             yield x, y
         else:
@@ -134,57 +179,35 @@ class Model():
                 batch_idx = indices[start_idx:start_idx + batch_size]
                 yield x[batch_idx], y[batch_idx]
 
-    def evaluate_metrics(self, y, y_pred):
-        accuracy = accuracy_score(y, y_pred)
-        precision = precision_score(y, y_pred, zero_division=0)
-        recall = recall_score(y, y_pred)
-        f1 = f1_score(y, y_pred)
+    def print_history(self) -> None:
+        """
+        Prints the training history.
 
-        return accuracy, precision, recall, f1
+        Returns:
+            None.
+        """
+        if len(self.history) == 0:
+            print("It hasn't trained yet.")
+            return
+        for metric in self.history:
+            print(f"epoch {metric['epoch']} - loss: {metric['loss']} - val_loss: {metric['val_loss']}")
 
-    def compile(self, 
-                optimizer='rmsprop', 
-                loss=None, 
-                metrics=None, 
-                loss_weights=None, 
-                weighted_metrics=None, 
-                run_eagerly=None, 
-                steps_per_execution=None
-        ):
+    def update_history(self, y, y_pred, validation_data=None):
+        """
+        Updates the training history with new metrics.
 
-        if isinstance(optimizer, optimizers.Optimizer):
-            self.optimizer = optimizer
-        elif optimizer == 'sgd':
-            self.optimizer = optimizers.SGD()
-        elif optimizer == 'rmsprop':
-            self.optimizer = optimizers.RMSprop()
+        Args:
+            y (ndarray): True labels.
+            y_pred (ndarray): Predicted labels.
+            validation_data (tuple): Validation dataset of x_val, y_val.
 
-        if not loss:
-            raise ValueError("No loss found. You may have forgotten to provide a `loss` argument in the `compile()` method.")
-        elif loss == 'binary_crossentropy':
-            self.loss = binary_crossentropy
-            self.loss_prime = binary_crossentropy_derivative
-            self.history['loss'] = []
-        elif loss == 'mse':
-            self.loss = mse
-            self.loss_prime = mse_derivative
-            self.history['loss'] = []
-        elif isinstance(loss, losses.Loss):
-            print("loss is a class")
-            self.loss = loss.loss
-            self.loss_prime = loss.dloss
-            self.history['loss'] = []
-
-        if metrics:
-            self.metrics = metrics
-            for metric in metrics:
-                self.history[metric.lower()] = []
-
-        self._is_compiled = True
-        return
-
-    def update_history(self, y_true, y_pred, validation_data=None):
-        accuracy, precision, recall, f1 = self.evaluate_metrics(y_true, y_pred)
+        Returns:
+            accuracy : The accuracy value.
+            precision : The precision value.
+            recall : The recall value.
+            f1: The f1 score value.
+        """
+        accuracy, precision, recall, f1 = self.evaluate_metrics(y, y_pred)
         if validation_data:
             valid = "val_"
         else:
@@ -201,77 +224,3 @@ class Model():
             print(f" - {valid}recall: {recall:.2f}%", end="")
 
         return accuracy, precision, recall, f1
-
-    def fit(self, 
-            x, 
-            y, 
-            batch_size, 
-            validation_data=None):
-        if self._is_compiled == False:
-            raise RuntimeError("You must compile your model before training/testing. Use `model.compile(optimizer, loss)")
-        best_loss = float('inf')
-        counter = 0
-
-        total_loss = 0
-        n_batches = 0
-
-        n_classes = len(np.unique(y))
-        y_train_batch = np.empty((0, n_classes))
-        predictions = np.empty((0, n_classes))
-        for x_batch, y_batch in self.create_mini_batches(x, y, batch_size):
-            y_batch = one_hot_encode_labels(y_batch, n_classes)
-            y_pred = self.forward(x_batch)
-
-            y_train_batch = np.vstack((y_train_batch, y_batch))
-            predictions = np.vstack((predictions, convert_to_binary_pred(y_pred)))
-
-            total_loss += self.loss(y_batch, y_pred)
-            n_batches += 1
-            self.backward(y_batch, y_pred)
-
-
-        total_loss /= n_batches
-        self.history['loss'].append(total_loss)
-        accuracy, _, _, _ = self.update_history(y_train_batch, predictions)
-
-
-        # Calculate validation loss and accuracy
-        if validation_data:
-            if not isinstance(validation_data, tuple):
-                raise TypeError("tuple validation_data is needed.")
-            x_val, y_val = validation_data
-            if 'val_loss' not in self.history:
-                self.history['val_loss'] = []
-                for metric in self.metrics:
-                    self.history[f"val_{metric.lower()}"] = []
-            # print('x_valid shape :', x_val.shape)
-
-            val_y_pred = self.forward(x_val)
-            y_val = one_hot_encode_labels(y_val, n_classes)
-            val_loss = self.loss(y_val, val_y_pred)
-            self.history['val_loss'].append(val_loss)
-            val_accuracy, _, _, _ = self.update_history(y_val, convert_to_binary_pred(val_y_pred), validation_data)
-
-        '''
-            # Check if validation loss is decreasing
-            if val_loss < best_loss:
-                best_loss = val_loss
-                counter = 0
-            else:
-                counter += 1
-            # Stop early if the validation loss hasn't improved for 'patience' epochs
-            if counter >= patience:
-                print(f"Early stopping at epoch {epoch}.")
-                break
-        if accuracy:
-            print('\nTrain accuracy:', accuracy)
-        if val_accuracy:
-            print('\nValidation accuracy:', val_accuracy)
-            '''
-        return self
-
-    def predict(self, x, threshold=0.5):
-        y_pred = self.forward(x)
-        #error = binary_cross_entropy_elem(y_test, y_pred)
-        #print('loss:', error[:,0])
-        return convert_to_binary_pred(y_pred) 
