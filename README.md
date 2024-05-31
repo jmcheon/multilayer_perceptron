@@ -77,7 +77,22 @@ options:
   -c [{models,optimizers}], --compare [{models,optimizers}]
                         Compare models by plotting learning curves.
 ```
-### Training 
+
+For training with the saved model topology 
+
+```
+python3 main.py --params topologies/saved_model_config.json -t
+```
+
+It saves its weight and bias in a `saved_model_weights.npz` file
+
+<br>
+
+For prediction
+```
+python3 main.py --params topologies/saved_model_config.json -p
+```
+### Binary Classification
 
 #### Neural Network Topology
 ``` python
