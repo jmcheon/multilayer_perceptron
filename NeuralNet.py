@@ -150,7 +150,7 @@ class NeuralNet(Model):
 
         total_loss /= n_batches
         self.history['loss'].append(total_loss)
-        accuracy, _, _, _ = self.update_history(y_train_batch, predictions)
+        self.update_history(y_train_batch, predictions)
 
 
         # Calculate validation loss and accuracy
@@ -168,7 +168,8 @@ class NeuralNet(Model):
             y_val = one_hot_encode_labels(y_val, n_classes)
             val_loss = self.loss(y_val, val_y_pred)
             self.history['val_loss'].append(val_loss)
-            val_accuracy, _, _, _ = self.update_history(y_val, convert_to_binary_pred(val_y_pred), validation_data)
+            self.update_history(y_val, convert_to_binary_pred(val_y_pred), validation_data)
+        self.print_history()
 
         return self
 

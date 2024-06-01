@@ -1,13 +1,14 @@
 import json
 import sys
 
+import config
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
 
 
-def load_weights(filename):
+def load_parameters(filename):
     try:
         loaded = np.load(filename + '.npz', allow_pickle=True)
         weights = [loaded[f'arr_{i}'] for i in range(len(loaded.files))]
@@ -17,7 +18,7 @@ def load_weights(filename):
         sys.exit()
     return weights
 
-def load_config(filename):
+def load_topology(filename):
     try:
         with open(filename, 'r') as file:
             config_data = json.load(file)
@@ -36,15 +37,17 @@ def load_config(filename):
     return config_data
 
 def one_hot_encode_labels(y, n_classes):
+    # print("\nn_classes: ", n_classes)
     one_hot_encoded_labels = np.zeros((len(y), n_classes))
     for i, single_y in enumerate(y):
+        # print("single_y:", single_y)
         one_hot_encoded_labels[i, int(single_y)] = 1
 
     return one_hot_encoded_labels
 
 def convert_to_binary_pred(y_pred, threshold=0.5):
     out = np.argmax(y_pred, axis=1)
-    out = one_hot_encode_labels(out, 2)
+    out = one_hot_encode_labels(out, config.n_classes)
     return out
     # return (y_pred > threshold).astype(int)
 
@@ -101,11 +104,14 @@ def load_split_data(filename):
     df[1] = df[1].map({"M": 1, "B": 0})
     y = df[1].values
     x = df.drop([0, 1], axis=1).values
+    # y = df[0].values
+    # x = df.drop([0], axis=1).values
 
     # Normalize the data
     scaler = StandardScaler()
     x = scaler.fit_transform(x)
     #y = one_hot_encode_binary_labels(y)
     y = y.reshape(-1, 1)
+    config.n_classes = len(np.unique(y))
 
     return x, y

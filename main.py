@@ -1,6 +1,5 @@
 import argparse
-import json
-import sys
+import sys, os
 
 import config
 from srcs.metrics import accuracy_score
@@ -9,26 +8,26 @@ from Model import Model
 from NeuralNet import NeuralNet
 from ModelPlotter import ModelPlotter
 from ModelTrainer import ModelTrainer
-from srcs.utils import load_config, load_split_data, load_weights, one_hot_encode_labels
+from srcs.utils import load_topology, load_split_data, load_parameters, one_hot_encode_labels
 import srcs.losses as losses
 
 
 def prediction():
     weights_path = config.weights_dir + config.weights_path
-    config_path = config.models_dir + config.config_path
+    config_path = config.topologies_dir + config.config_path
     test_path = config.data_dir + config.test_path
 
     x, y = load_split_data(test_path)
-    weights = load_weights(weights_path)
-    config_data = load_config(config_path)
+    weights = load_parameters(weights_path)
+    config_data = load_topology(config_path)
 
 
     model = NeuralNet()
     # print("Net doc:", model.__doc__)
     model.create_network(config_data)
-    model.set_weights(list(weights))
+    model.set_parameters(list(weights))
     y_pred = model.predict(x)
-    y = one_hot_encode_labels(y, 2)
+    y = one_hot_encode_labels(y, config.n_classes)
     # print(y.shape, y_pred.shape)
     accuracy = accuracy_score(y, y_pred)
     print('\nAccuracy:', accuracy)
@@ -94,8 +93,9 @@ if __name__ == "__main__":
     params = None
 
     if args.params:
-        params = load_config(args.params)
-        #print(params)
+        params = load_topology(args.params)
+        filename = os.path.basename(args.params)
+        filename = os.path.splitext(filename)[0]
     if args.split:
         split_dataset_save(args.split, train_path, valid_path, train_size=0.8, random_state=42)
 
@@ -118,7 +118,8 @@ if __name__ == "__main__":
                                 validation_data=(x_val, y_val),
                 )
         if isinstance(model, Model):
-            model.save_model()
+            # model.save_topology(config.topologies_dir + filename)
+            model.save_parameters(config.weights_dir + filename)
 
     elif args.predict:
         prediction()

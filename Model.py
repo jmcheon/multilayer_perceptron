@@ -12,11 +12,13 @@ class Model():
     Base Model Class.
 
     Methods:
-        create_network: Initializes the network architecture.
-        save_model: Saves the model parameters to a file.
-        get_weights: Retrieves the model weights.
-        set_weights: Sets the model weights.
-        get_network_topology: Retrieves the network topology.
+        create_network: Initializes the model architecture.
+        save_topology: Saves the model topology to a file.
+        save_parameters: Saves the model parameters to a file.
+
+        get_parameters: Retrieves the model parameters.
+        set_parameters: Sets the model parameters.
+        get_topology: Retrieves the model topology.
 
         evaluate_metrics: Evaluates specified metrics on the model.
         create_mini_batch: Creates mini-batches from the training data.
@@ -69,60 +71,72 @@ class Model():
 
         return layers
 
-    def save_model(self) -> None:
+    def save_topology(self, filepath) -> None:
         """
-        Saves the model parameters to a file.
-        """
-        # Save model configuration as a JSON file
-        model_config = self.get_network_topology()
-        with open(config.models_dir + config.config_path, 'w') as json_file:
-            json.dump(model_config, json_file)
-            print(f"> Saving model configuration to '{config.models_dir + config.config_path}'")
-        
-        # Save model weights as a .npy file
-        model_weights = self.get_weights()
-        np.savez(config.weights_dir + config.weights_path, *model_weights)
-        print(f"> Saving model weights to '{config.weights_dir + config.weights_path}'")
-
-    def get_weights(self) -> list[np.ndarray]:
-        """
-        Retrieves the model weights.
-
-        Returns:
-            list: A list containing the model weights.
-        """
-        weights_and_bias = []
-        for layer in self.layers:
-            if isinstance(layer, Dense):
-                weights_and_bias.append(layer.weights)
-                weights_and_bias.append(layer.bias)
-        return weights_and_bias
-
-    def set_weights(self, initial_weights) -> None:
-        """
-        Sets the model weights.
+        Saves the model topology to a file.
 
         Args:
-            weights (list): A list containing the new weights.
+            filepath (str): Path to the file where model topology will be saved.
+        """
+        topology = self.get_topology()
+        # print(f"filepaht: {filepath}, for model topology")
+        # Save model topology as a JSON file
+        with open(filepath + ".json", 'w') as json_file:
+            json.dump(topology, json_file)
+            print(f"> Saving model configuration to '{filepath}.json'")
+
+    def save_parameters(self, filepath) -> None:
+        """
+        Saves the model parameters to a file.
+
+        Args:
+            filepath (str): Path to the file where parameters will be saved.
+        """
+        # print(f"filepaht: {filepath}, for model parameters")
+        # Save model parameters as a .npz file
+        parameters = self.get_parameters()
+        np.savez(filepath, *parameters)
+        print(f"> Saving model parameters to '{filepath}.npz'")
+
+    def get_parameters(self) -> list[np.ndarray]:
+        """
+        Retrieves the model parameters.
+
+        Returns:
+            list: A list containing the model parameters.
+        """
+        parameters = []
+        for layer in self.layers:
+            if isinstance(layer, Dense):
+                parameters.append(layer.weights)
+                parameters.append(layer.bias)
+        return parameters
+
+    def set_parameters(self, initial_parameters) -> None:
+        """
+        Sets the model parameters.
+
+        Args:
+            weights (list): A list containing the new parameters.
 
         Returns:
             None.
         """
-        if not isinstance(initial_weights, list):
-            raise TypeError("Invalid type of initial_weights, a list of weights required.")
-        if not len(initial_weights) == 2 * len(self.layers):
-            raise ValueError("Invalid input of list: not enought values to set weights and biases.")
+        if not isinstance(initial_parameters, list):
+            raise TypeError("Invalid type of initial_parameters, a list of parameters required.")
+        if not len(initial_parameters) == 2 * len(self.layers):
+            raise ValueError("Invalid input of list: not enought values to set parameters.")
 
-        for index, layer in zip(range(0, len(initial_weights), 2), self.layers):
+        for index, layer in zip(range(0, len(initial_parameters), 2), self.layers):
             if isinstance(layer, Dense):
-                layer.set_weights(initial_weights[index], initial_weights[index + 1])
+                layer.set_parameters(initial_parameters[index], initial_parameters[index + 1])
 
-    def get_network_topology(self) -> list:
+    def get_topology(self) -> list:
         """
-        Retrieves the network topology.
+        Retrieves the model topology.
 
         Returns:
-            list: A list describing the network topology.
+            list: A list describing the model topology.
         """
         layers = []
         for layer in self.layers:
@@ -190,9 +204,9 @@ class Model():
             print("It hasn't trained yet.")
             return
         for metric in self.history:
-            print(f"epoch {metric['epoch']} - loss: {metric['loss']} - val_loss: {metric['val_loss']}")
+            print(f" - {metric}: {self.history[f'{metric}'][-1]:.4f}", end="")
 
-    def update_history(self, y, y_pred, validation_data=None):
+    def update_history(self, y, y_pred, validation_data=None) -> None:
         """
         Updates the training history with new metrics.
 
@@ -202,25 +216,16 @@ class Model():
             validation_data (tuple): Validation dataset of x_val, y_val.
 
         Returns:
-            accuracy : The accuracy value.
-            precision : The precision value.
-            recall : The recall value.
-            f1: The f1 score value.
+            None.
         """
         accuracy, precision, recall, f1 = self.evaluate_metrics(y, y_pred)
         if validation_data:
             valid = "val_"
         else:
             valid = ""
-        print(f' - {valid}loss: {self.history[f"{valid}loss"][-1]:.4f}', end="")
         if 'accuracy' in self.metrics:
             self.history[valid + 'accuracy'].append(accuracy)
-            print(f" - {valid}accuracy: {accuracy:.2f}%", end="")
         if 'Precision' in self.metrics:
             self.history[valid + 'precision'].append(precision)
-            print(f" - {valid}precision: {precision:.2f}%", end="")
         if 'Recall' in self.metrics:
             self.history[valid + 'recall'].append(recall)
-            print(f" - {valid}recall: {recall:.2f}%", end="")
-
-        return accuracy, precision, recall, f1

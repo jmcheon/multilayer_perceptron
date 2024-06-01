@@ -1,13 +1,13 @@
 [
   {
     "type": "Dense",
-    "shape": [784, 16],
+    "shape": [784, 20],
     "activation": "relu",
     "weights_initializer": "glorot_uniform"
   },
   {
     "type": "Dense",
-    "shape": [16, 16],
+    "shape": [20, 16],
     "activation": "relu",
     "weights_initializer": "glorot_uniform"
   },

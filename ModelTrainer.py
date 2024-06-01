@@ -2,7 +2,7 @@ import config
 import srcs.optimizers as optimizers
 from NeuralNet import NeuralNet
 from srcs.layers import Dense
-from srcs.utils import (load_config, load_split_data, load_weights,
+from srcs.utils import (load_topology, load_split_data, load_parameters,
                         split_dataset_save)
 
 
@@ -40,12 +40,12 @@ class ModelTrainer():
                 metrics=['accuracy', 'Precision', 'Recall'],
         )
         '''
-        weights = load_weights(config.weights_dir + config.tensorflow_weights_npy)
+        weights = load_parameters(config.weights_dir + config.tensorflow_weights_npy)
         '''
         for i in range(len(weights)):
             print('weights shape:', weights[i].shape)
         '''
-        model.set_weights(list(weights))
+        model.set_parameters(list(weights))
         return model
     
     
@@ -123,8 +123,8 @@ class ModelTrainer():
                 x_train, y_train, validation_data=validation_data, 
                 batch_size=batch_size)
 
-
             histories.append(history)
+        print()
 
         model_names.append(f"{model.name} + {model.optimizer.name}")
         return histories, model_names

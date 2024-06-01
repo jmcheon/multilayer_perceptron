@@ -64,7 +64,7 @@ class Dense(Layer):
         super().__init__(input_shape, output_shape, activation, weights_initializer, bias_initializer)
         self.deltas = None
 
-    def set_weights(self, weights, bias):
+    def set_parameters(self, weights, bias):
         if weights.shape != self.weights.shape:
             print(weights.shape, self.weights.shape)
             raise ValueError("Incompatible shape of weights.")
