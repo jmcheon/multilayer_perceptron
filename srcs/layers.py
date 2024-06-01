@@ -27,7 +27,7 @@ class Layer:
         elif weights_initializer == 'random':
             self.weights = np.random.randn(input_shape, output_shape)
             self.weights_initializer = 'random'
-            self.bias = np.random.randn((1, output_shape))
+            self.bias = np.random.randn(1, output_shape)
         elif weights_initializer == 'zeros':
             self.weights = np.zeros((input_shape, output_shape))
             self.weights_initializer = 'zeros'
@@ -37,15 +37,11 @@ class Layer:
 
         # Activation function
         if activation.lower() == 'relu':
-            self.activation = activations.relu
-            self.activation_derivative = lambda gradient :activations.relu_derivative(self.outputs, gradient)
+            self.activation = activations.ReLU()
         elif activation.lower() == 'sigmoid':
-            self.activation = activations.sigmoid
-            self.activation_derivative = lambda gradient :activations.sigmoid_derivative(self.outputs, gradient)
+            self.activation = activations.Sigmoid()
         elif activation.lower() == 'softmax':
-            self.activation = activations.softmax
-            self.activation_derivative = lambda gradient :activations.softmax_derivative(self.outputs, gradient)
-
+            self.activation = activations.Softmax()
 
     def forward(self, x):
         pass
@@ -71,12 +67,12 @@ class Dense(Layer):
         self.weights = weights
         self.bias = bias
 
-    def set_activation_gradient(self, gradient):
-        self.deltas = self.activation_derivative(gradient) 
+    def set_activation_gradient(self, gradients):
+        self.deltas = self.activation.df(self.outputs, gradients) 
 
     def forward(self, input_data):
         self.inputs = input_data
         z = np.dot(self.inputs, self.weights) + self.bias
         self.z = z
-        self.outputs = self.activation(z)
+        self.outputs = self.activation.f(z)
         return self.outputs

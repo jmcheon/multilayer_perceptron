@@ -101,11 +101,11 @@ def load_split_data(filename):
     if df is None:
         return None, None
 
-    df[1] = df[1].map({"M": 1, "B": 0})
-    y = df[1].values
-    x = df.drop([0, 1], axis=1).values
-    # y = df[0].values
-    # x = df.drop([0], axis=1).values
+    # df[1] = df[1].map({"M": 1, "B": 0})
+    # y = df[1].values
+    # x = df.drop([0, 1], axis=1).values
+    y = df[0].values
+    x = df.drop([0], axis=1).values
 
     # Normalize the data
     scaler = StandardScaler()

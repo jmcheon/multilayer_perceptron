@@ -183,8 +183,8 @@ class Model():
             batch_size (int): The size of each mini-batch.
         """
 
-        if isinstance(batch_size, str) and batch_size == 'batch':
-            yield x, y
+        if batch_size == None:
+            return x, y
         else:
             indices = np.arange(x.shape[0])
             np.random.shuffle(indices)

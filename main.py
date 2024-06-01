@@ -8,13 +8,13 @@ from Model import Model
 from NeuralNet import NeuralNet
 from ModelPlotter import ModelPlotter
 from ModelTrainer import ModelTrainer
-from srcs.utils import load_topology, load_split_data, load_parameters, one_hot_encode_labels
+from srcs.utils import load_topology, load_split_data, load_parameters, one_hot_encode_labels, split_dataset_save
 import srcs.losses as losses
 
 
-def prediction():
-    weights_path = config.weights_dir + config.weights_path
-    config_path = config.topologies_dir + config.config_path
+def prediction(filename):
+    weights_path = config.weights_dir + filename
+    config_path = config.topologies_dir + filename + ".json" 
     test_path = config.data_dir + config.test_path
 
     x, y = load_split_data(test_path)
@@ -60,7 +60,7 @@ def set_argparse():
     parser.add_argument('--loss', type=str, default='binary_crossentropy',
                         help='Loss function')
     
-    parser.add_argument('--batch_size', type=int, default=30,
+    parser.add_argument('--batch_size', type=int, default=100,
                         help='Batch size for training')
     
     parser.add_argument('--learning_rate', type=float, default=1e-3,
@@ -110,8 +110,8 @@ if __name__ == "__main__":
                                 x_train, 
                                 y_train, 
                                 optimizer_list,
-                                # loss=args.loss,
-                                loss=losses.CrossEntropyLoss(),
+                                loss=args.loss,
+                                # loss=losses.CrossEntropyLoss(),
                                 metrics=['accuracy', 'Precision', 'Recall'],
                                 batch_size=args.batch_size, 
                                 epochs=args.epochs, 
@@ -122,7 +122,7 @@ if __name__ == "__main__":
             model.save_parameters(config.weights_dir + filename)
 
     elif args.predict:
-        prediction()
+        prediction(filename)
     elif args.compare == "optimizers":
         histories, model_names = trainer.optimizer_test()
     else:
