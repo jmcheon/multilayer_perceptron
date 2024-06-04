@@ -1,24 +1,27 @@
-#  Multilayer Perceptron 
->*_Summary: This project is an introduction to artificial neural networks, with the implementation of a multilayer perceptron_*
+# Multilayer Perceptron
 
-| Requirements | Skills |
-|--------------|--------|
-| - `python3.11`<br> - `numpy`<br> - `pandas`<br> - `matplotlib`<br>  | - `DB & Data`<br> - `Algorithms & AI` |
+> _*Summary: This project is an introduction to artificial neural networks, with the implementation of a multilayer perceptron*_
+
+| Requirements                                                       | Skills                                |
+| ------------------------------------------------------------------ | ------------------------------------- |
+| - `python3.11`<br> - `numpy`<br> - `pandas`<br> - `matplotlib`<br> | - `DB & Data`<br> - `Algorithms & AI` |
 
 </br>
 
 ## Project Overview
+
 This project is based on the multilayer perceptron from 42 Paris, and I have added more functionalities. For those who want to refer to this project within the scope of 42, here is the link to the [multilayer perceptron - 42 Project](https://github.com/jmcheon/multilayer_perceptron/tree/42v2.0).
 
 </br>
 
 ## 1. Dataset
 
-It is a CSV file of 32 columns, the column **diagnosis** being the label you want to learn given all the other features of an example, it can be either the value $M$ or $B$ (for malignant or benign). 
+It is a CSV file of 32 columns, the column **diagnosis** being the label you want to learn given all the other features of an example, it can be either the value $M$ or $B$ (for malignant or benign).
 
 The features of the dataset describe the characteristics of a cell nucleus of breast mass extracted with [fine-needle aspiration](https://en.wikipedia.org/wiki/Fine-needle_aspiration). (for more detailed information, go [here](https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.names)).
 
 #### 5 examples of the dataset
+
 ```bash
 842302,M,17.99,10.38,122.8,1001,0.1184,0.2776,0.3001,0.1471,0.2419,0.07871,1.095,0.9053,8.589,153.4,0.006399,0.04904,0.05373,0.01587,0.03003,0.006193,25.38,17.33,184.6,2019,0.1622,0.6656,0.7119,0.2654,0.4601,0.1189
 842517,M,20.57,17.77,132.9,1326,0.08474,0.07864,0.0869,0.07017,0.1812,0.05667,0.5435,0.7339,3.398,74.08,0.005225,0.01308,0.0186,0.0134,0.01389,0.003532,24.99,23.41,158.8,1956,0.1238,0.1866,0.2416,0.186,0.275,0.08902
@@ -30,9 +33,9 @@ The features of the dataset describe the characteristics of a cell nucleus of br
 
 #### Attribute Information
 
-1) ID number  
-2) Diagnosis (M = malignant, B = benign)  
-3-32)
+1. ID number
+2. Diagnosis (M = malignant, B = benign)  
+   3-32)
 
 Ten real-valued features are computed for each cell nucleus:
 
@@ -63,7 +66,8 @@ Class distribution: 357 benign, 212 malignant
 ## 2. Implementation
 
 #### Usage
-``` bash
+
+```bash
 usage: main.py [-h] [-s SPLIT] [-t] [-p] [-c [{models,optimizers}]]
 
 This program is an implementation of a Multilayer Perceptron (MLP), a type of artificial neural network designed for tasks such as classification, regression, and pattern recognition.
@@ -78,24 +82,27 @@ options:
                         Compare models by plotting learning curves.
 ```
 
-For training with the saved model topology 
+For training with the saved model topology
 
 ```
-python3 main.py --params topologies/saved_model_config.json -t
+python3 main.py --topology topologies/binary_sigmoid.json -t
 ```
 
-It saves its weight and bias in a `saved_model_weights.npz` file
+It saves its weight and bias in a `binary_sigmoid.npz` file
 
 <br>
 
 For prediction
+
 ```
-python3 main.py --params topologies/saved_model_config.json -p
+python3 main.py --topology topologies/binary_sigmoid.json -p
 ```
+
 ### Binary Classification
 
 #### Neural Network Topology
-``` python
+
+```python
 input_shape = 30
 output_shape = 1
 loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=30
@@ -107,18 +114,20 @@ network = model.create_network([
         Dense(5, output_shape, activation='sigmoid')
         ])
 ```
+
 #### Training Learning Curves
 
-| loss, accuracy for training and validation|
-|---------------------------------------------|
-|![learning_curves](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/36faa30e-57ea-4043-80f6-b66ad092fe1e)|
+| loss, accuracy for training and validation                                                                                |
+| ------------------------------------------------------------------------------------------------------------------------- |
+| ![learning_curves](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/36faa30e-57ea-4043-80f6-b66ad092fe1e) |
+
 Train accuracy: 0.9845 Validation accuracy: 0.9912
 
 ---
 
 ### Comparing models - 3 models of different neural networks
 
-``` python
+```python
 input_shape = 30
 output_shape = 1
 loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=50
@@ -145,15 +154,17 @@ loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=50
         ])
 ```
 
+| models                                                                                                           |
+| ---------------------------------------------------------------------------------------------------------------- |
+| ![models](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/accc3f5d-06c9-441b-89cd-1272494d9f5d) |
 
-| models |
-|---------------------------------------------|
-|![models](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/accc3f5d-06c9-441b-89cd-1272494d9f5d)|
 Model1 - Train accuracy: 0.9604 Validation accuracy: 0.9736
 Model2 - Train accuracy: 0.9560 Validation accuracy: 0.9824
 Model3 - Train accuracy: 0.8879 Validation accuracy: 0.8771
+
 ### Optimizers - SGD, RMSprop, Adam
-``` python
+
+```python
 input_shape = 30
 output_shape = 1
 loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=30
@@ -165,18 +176,18 @@ loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=30
         Dense(10, 5, activation='relu'),
         Dense(5, output_shape, activation='sigmoid')
         ])
-        
- model_list = [                                                                                         
-             (model1, optimizers.SGD(learning_rate=1e-3)),                                                  
-             (model2, optimizers.RMSprop(learning_rate=1e-3)),                                              
-             (model3, optimizers.Adam(learning_rate=1e-3)),                                                 
-] 
+
+ model_list = [
+             (model1, optimizers.SGD(learning_rate=1e-3)),
+             (model2, optimizers.RMSprop(learning_rate=1e-3)),
+             (model3, optimizers.Adam(learning_rate=1e-3)),
+]
 ```
 
-| optimizers |
-|---------------------------------------------|
-|![optimizers](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/c1a78d9d-1e9f-431a-b560-ee880e751350)|
+| optimizers                                                                                                           |
+| -------------------------------------------------------------------------------------------------------------------- |
+| ![optimizers](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/c1a78d9d-1e9f-431a-b560-ee880e751350) |
+
 Model1 - Train accuracy: 0.9318 Validation accuracy: 0.9473
 Model2 - Train accuracy: 0.9340 Validation accuracy: 0.9649
 Model2 - Train accuracy: 0.9582 Validation accuracy: 0.9561
-

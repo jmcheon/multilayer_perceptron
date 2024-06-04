@@ -1,15 +1,13 @@
 
 data_dir = './datasets/WDBC/' # './datasets/PATH_TO_DATASET/'
-weights_dir = './weights/'
+parameters_dir = './parameters/'
 topologies_dir = './topologies/'
-
-n_classes = 0
 
 #[SAVED MODEL]
 weights_path = 'saved_parameters'
 config_path = 'saved_topology.json'
 
-#[TENSORFLOW WEIGHTS]
+#[TENSORFLOW parameters]
 tensorflow_weights_npy= 'saved_tensorflow_weights.npy'
 tensorflow_weights_h5= 'tensorflow_weights.h5'
 

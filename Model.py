@@ -2,7 +2,6 @@ import json
 
 import numpy as np
 
-import config
 from srcs.layers import Dense, Layer
 from srcs.metrics import accuracy_score, f1_score, precision_score, recall_score
 
@@ -22,11 +21,13 @@ class Model():
 
         evaluate_metrics: Evaluates specified metrics on the model.
         create_mini_batch: Creates mini-batches from the training data.
+        one_hot_encode_labels: Creates one hot encoded labels 
 
         print_history: Prints the training history.
         update_history: Updates the training history with new metrics.
     """
     def __init__(self, name="Model"):
+        self.shape = None
         self.layers = None
         self.n_layers = 0 
         self.history = {}
@@ -45,8 +46,6 @@ class Model():
         layers = None
         if isinstance(net, list) and all(isinstance(layer, Layer) for layer in net):
             layers = net
-            self.layers = layers
-            self.n_layers = len(layers)
         elif isinstance(net, list) and all(isinstance(layer_data, dict) for layer_data in net):
             print("Creating a neural network...")
             layers = []
@@ -61,10 +60,11 @@ class Model():
                                                 layer_data['shape'][1], 
                                                 activation=layer_data['activation'],
                                                 weights_initializer=layer_data['weights_initializer']))
-            self.layers = layers
-            self.n_layers = len(layers)
         else:
             raise TypeError("Invalid form of input to create a neural network.")
+        self.layers = layers
+        self.n_layers = len(layers)
+        self.shape = (layers[0].shape[0], layers[-1].shape[1])
 
         if name:
             self.name = name
@@ -117,7 +117,7 @@ class Model():
         Sets the model parameters.
 
         Args:
-            weights (list): A list containing the new parameters.
+            initial_parameters (list): A list containing the new parameters.
 
         Returns:
             None.
@@ -183,15 +183,32 @@ class Model():
             batch_size (int): The size of each mini-batch.
         """
 
-        if batch_size == None:
-            return x, y
-        else:
-            indices = np.arange(x.shape[0])
-            np.random.shuffle(indices)
+        indices = np.arange(x.shape[0])
+        np.random.shuffle(indices)
 
+        if batch_size:
             for start_idx in range(0, x.shape[0] - batch_size + 1, batch_size):
                 batch_idx = indices[start_idx:start_idx + batch_size]
                 yield x[batch_idx], y[batch_idx]
+        else:
+            yield x, y
+
+    def one_hot_encode_labels(self, y) -> np.ndarray:
+        """
+        Creates one hot encoded labels
+
+        Args:
+            y (ndarray): The y training data.
+
+        Returns:
+            (ndarray): A one hot encoded ndarray.
+        """
+        if self.shape[1] > 1:
+            one_hot_encoded_labels = np.zeros((len(y), self.shape[1]))
+            for i, single_y in enumerate(y):
+                one_hot_encoded_labels[i, int(single_y)] = 1
+            return one_hot_encoded_labels
+        return y
 
     def print_history(self) -> None:
         """

@@ -2,30 +2,29 @@ import config
 import srcs.optimizers as optimizers
 from NeuralNet import NeuralNet
 from srcs.layers import Dense
-from srcs.utils import (load_topology, load_split_data, load_parameters,
-                        split_dataset_save)
+from srcs.utils import load_split_data, load_parameters
+                        
 
 
 class ModelTrainer():
     def __init__(self):
         self.model_list = []
 
-    def create(self, model_params):
-        if isinstance(model_params, list) and \
+    def create(self, model_topologies):
+        if isinstance(model_topologies, list) and \
             all(isinstance(model, list) and \
-                all(isinstance(layer_data, dict) for layer_data in model) for model in model_params):
+                all(isinstance(layer_data, dict) for layer_data in model) for model in model_topologies):
             print('Multiple model topologies found. creating models...')
-            self.create_models(model_params)
+            self.create_models(model_topologies)
             return self.model_list
-        elif isinstance(model_params, list) and all(isinstance(layer_data, dict) for layer_data in model_params):
+        elif isinstance(model_topologies, list) and all(isinstance(layer_data, dict) for layer_data in model_topologies):
             print('One model topology found. creating one model...')
-            model = self.create_model(model_params)
+            model = self.create_model(model_topologies)
             return model
         else:
             raise TypeError("Invalid form of input to create a neural network.")
 
-    def create_default_model(self):
-        model = NeuralNet()
+    def create_default_model(self, model):
         network = model.create_network([
             Dense(self.input_shape, 20, activation='relu'),
             Dense(20, 10, activation='relu'),
@@ -40,27 +39,23 @@ class ModelTrainer():
                 metrics=['accuracy', 'Precision', 'Recall'],
         )
         '''
-        weights = load_parameters(config.weights_dir + config.tensorflow_weights_npy)
-        '''
-        for i in range(len(weights)):
-            print('weights shape:', weights[i].shape)
-        '''
-        model.set_parameters(list(weights))
+        parameters = load_parameters(config.parameters_dir + config.tensorflow_weights_npy)
+        model.set_parameters(list(parameters))
         return model
     
     
-    def create_model(self, params=None):
+    def create_model(self, topology=None):
         model = NeuralNet()
-        if params:
-            network = model.create_network(params)
+        if topology:
+            network = model.create_network(topology)
         else:
-            model = self.create_default_model()
+            model = self.create_default_model(model)
         self.model_list.append(model)
         return model
 
-    def create_models(self, model_params):
-        for params in model_params:
-            model = self.create_model(params)
+    def create_models(self, model_topologies):
+        for topology in model_topologies:
+            model = self.create_model(topology)
 
     def train(self,
             model_list,
@@ -76,7 +71,7 @@ class ModelTrainer():
         """
         """
         if len(model_list) == 0:
-            raise RuntimeError("You must create your model before training. Use `create(model_params)")
+            raise RuntimeError("You must create your model before training. Use `create(model_topologies)")
         elif len(model_list) != len(optimizer_list):
             raise RuntimeError("The number of Optimizers doesn't match with model's")
         else:
@@ -163,11 +158,11 @@ class ModelTrainer():
             model_names.append(model_name[0])
         return histories, model_names
 
-    def compare_models(self, model_params):
+    def compare_models(self, model_topologies):
         x_train, y_train = load_split_data(self.train_path)
         x_val, y_val = load_split_data(self.valid_path)
     
-        self.create(model_params)
+        self.create(model_topologies)
         optimizer = optimizers.SGD(learning_rate=1e-3)
     
         optimizer_list = [

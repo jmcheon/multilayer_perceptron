@@ -2,7 +2,6 @@ import numpy as np
 
 import srcs.optimizers as optimizers
 import srcs.losses as losses
-from srcs.utils import convert_to_binary_pred, one_hot_encode_labels
 from Model import Model
 
 
@@ -96,7 +95,6 @@ class NeuralNet(Model):
             self.loss = losses.MSELoss()
             self.history['loss'] = []
         elif isinstance(loss, losses.Loss):
-            print("loss is a class")
             self.loss = loss
             self.history['loss'] = []
 
@@ -127,27 +125,19 @@ class NeuralNet(Model):
         if self._is_compiled == False:
             raise RuntimeError("You must compile your model before training/testing. Use `model.compile(optimizer, loss)")
 
-        total_loss = 0
-        n_batches = 0
-
-        n_classes = len(np.unique(y))
-        y_train_batch = np.empty((0, n_classes))
-        predictions = np.empty((0, n_classes))
+        y_train_batch = np.empty((0, self.shape[1]))
+        y_train_pred = np.empty((0, self.shape[1]))
         for x_batch, y_batch in self.create_mini_batches(x, y, batch_size):
-            y_batch = one_hot_encode_labels(y_batch, n_classes)
+            y_batch = self.one_hot_encode_labels(y_batch)
             y_pred = self.forward(x_batch)
-
-            y_train_batch = np.vstack((y_train_batch, y_batch))
-            predictions = np.vstack((predictions, convert_to_binary_pred(y_pred)))
-
-            total_loss += self.loss.loss(y_batch, y_pred)
-            n_batches += 1
             self.backward(y_batch, y_pred)
 
+            y_train_batch = np.vstack((y_train_batch, y_batch))
+            y_train_pred = np.vstack((y_train_pred, y_pred))
 
-        total_loss /= n_batches
+        total_loss = self.loss.loss(y_train_batch, y_train_pred)
+        self.update_history(y_train_batch, self.predict(y_train_pred, True))
         self.history['loss'].append(total_loss)
-        self.update_history(y_train_batch, predictions)
 
 
         # Calculate validation loss and accuracy
@@ -159,18 +149,17 @@ class NeuralNet(Model):
                 self.history['val_loss'] = []
                 for metric in self.metrics:
                     self.history[f"val_{metric.lower()}"] = []
-            # print('x_valid shape :', x_val.shape)
 
-            val_y_pred = self.forward(x_val)
-            y_val = one_hot_encode_labels(y_val, n_classes)
-            val_loss = self.loss.loss(y_val, val_y_pred)
+            y_val_pred = self.forward(x_val)
+            y_val = self.one_hot_encode_labels(y_val)
+            val_loss = self.loss.loss(y_val, y_val_pred)
             self.history['val_loss'].append(val_loss)
-            self.update_history(y_val, convert_to_binary_pred(val_y_pred), validation_data)
+            self.update_history(y_val, self.predict(y_val_pred, True), validation_data)
         self.print_history()
 
         return self
 
-    def predict(self, x) -> np.ndarray:
+    def predict(self, x, y_pred=False, threshold=0.5) -> np.ndarray:
         """
         Makes predictions using the trained model.
 
@@ -180,5 +169,13 @@ class NeuralNet(Model):
         Returns:
             ndarray: Predicted labels.
         """
-        y_pred = self.forward(x)
-        return convert_to_binary_pred(y_pred) 
+        if y_pred == False:
+            y_pred = self.forward(x)
+        else:
+            y_pred = x
+
+        if self.shape[1] > 1:
+            out = np.argmax(y_pred, axis=1)
+            out = self.one_hot_encode_labels(out)
+            return out
+        return (y_pred > threshold).astype(int)
