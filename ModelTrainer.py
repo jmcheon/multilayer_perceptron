@@ -24,12 +24,12 @@ class ModelTrainer():
         else:
             raise TypeError("Invalid form of input to create a neural network.")
 
-    def create_default_model(self, model):
+    def create_default_model(self, model: NeuralNet):
         network = model.create_network([
-            Dense(self.input_shape, 20, activation='relu'),
+            Dense(self.shape[0], 20, activation='relu'),
             Dense(20, 10, activation='relu'),
             Dense(10, 5, activation='relu'),
-            Dense(5, self.output_shape, activation='sigmoid')
+            Dense(5, self.shape[1], activation='sigmoid')
             ])
         
         '''
@@ -106,23 +106,19 @@ class ModelTrainer():
 
         model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
     
-        histories = []
-        model_names = []
         # print('x_train shape :', x_train.shape)
         # print('y_train shape :', y_train.shape)
         for epoch in range(epochs):
             padding_width = len(str(epochs))
             print(f'\nEpoch {epoch + 1:0{padding_width}d}/{epochs}', end="")
 
-            history = model.fit(
+            model.fit(
                 x_train, y_train, validation_data=validation_data, 
                 batch_size=batch_size)
-
-            histories.append(history)
         print()
 
-        model_names.append(f"{model.name} + {model.optimizer.name}")
-        return histories, model_names
+        model_name = f"{model.name} + {model.optimizer.name}"
+        return model.history, model_name
 
     def train_models(
             self,
@@ -143,7 +139,7 @@ class ModelTrainer():
         model_names = []
         for (model, optimizer) in zip(model_list, optimizer_list):
             print(f"\nTraining {model.name}...")
-            history, model_name = self.train_model(
+            _, model_name = self.train_model(
                         model,
                         x_train, 
                         y_train, 
@@ -154,8 +150,8 @@ class ModelTrainer():
                         epochs, 
                         validation_data,
             )
-            histories.append(history[0])
-            model_names.append(model_name[0])
+            histories.append(model.history)
+            model_names.append(model_name)
         return histories, model_names
 
     def compare_models(self, model_topologies):

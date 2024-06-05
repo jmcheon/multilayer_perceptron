@@ -20,9 +20,9 @@ class ModelPlotter():
         if len(self.model_histories) == 1:
             self.plot_learning_curves(self.model_histories[0])
         else:
-            if any('accuracy' in history.history for history in self.model_histories):
+            if any('accuracy' in history for history in self.model_histories):
                 accuracy=True
-            if any('val' in str(history.history.keys()) for history in self.model_histories):
+            if any('val' in str(history.keys()) for history in self.model_histories):
                 validation_data=True
 
             if validation_data and accuracy:
@@ -44,31 +44,31 @@ class ModelPlotter():
             plt.show()
 
     def plot_learning_curves(self, history):
-        if 'accuracy' in history.history:
+        if 'accuracy' in history:
             fig, axes = plt.subplots(1, 2, figsize=(15, 5))
             for i in range(2):
                 ax = axes[i]
                 if (i == 0):
-                    ax.plot(history.history['loss'], label='training loss')
-                    if 'val_loss' in history.history:
-                        ax.plot(history.history['val_loss'], label='validation loss')
+                    ax.plot(history['loss'], label='training loss')
+                    if 'val_loss' in history:
+                        ax.plot(history['val_loss'], label='validation loss')
                     ax.set_xlabel('Epoch')
                     ax.set_ylabel('Loss')
                     ax.set_title(f'Learning Curves for loss')
                     ax.legend()
                 else:
-                    ax.plot(history.history['accuracy'], label='training accuracy')
-                    if 'val_accuracy' in history.history:
-                        ax.plot(history.history['val_accuracy'], label='validation accuracy')
+                    ax.plot(history['accuracy'], label='training accuracy')
+                    if 'val_accuracy' in history:
+                        ax.plot(history['val_accuracy'], label='validation accuracy')
                     ax.set_xlabel('Epoch')
                     ax.set_ylabel('Accuracy')
                     ax.set_title(f'Learning Curves for accuracy')
                     ax.legend()
         else:
             fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-            ax.plot(history.history['loss'], label='training loss')
-            if 'val_loss' in history.history:
-                ax.plot(history.history['val_loss'], label='validation loss')
+            ax.plot(history['loss'], label='training loss')
+            if 'val_loss' in history:
+                ax.plot(history['val_loss'], label='validation loss')
             ax.set_xlabel('Epoch')
             ax.set_ylabel('Loss')
             ax.set_title(f'Learning Curves for loss')
@@ -96,13 +96,13 @@ class ModelPlotter():
         for i in range(2):
             ax = axes[0][i]
             if (i == 0):
-                ax.plot(history.history['loss'], label=f'{name} training loss')
+                ax.plot(history['loss'], label=f'{name} training loss')
                 ax.set_xlabel('Epoch')
                 ax.set_ylabel('Loss')
                 ax.set_title(f'Training loss')
                 ax.legend()
             else:
-                ax.plot(history.history['accuracy'], label=f'{name} training accuracy')
+                ax.plot(history['accuracy'], label=f'{name} training accuracy')
                 ax.set_xlabel('Epoch')
                 ax.set_ylabel('Accuracy')
                 ax.set_title(f'Training accuracy')
@@ -110,13 +110,13 @@ class ModelPlotter():
         for i in range(2):
             ax = axes[1][i]
             if (i == 0):
-                ax.plot(history.history['val_loss'], label=f'{name} validation loss')
+                ax.plot(history['val_loss'], label=f'{name} validation loss')
                 ax.set_xlabel('Epoch')
                 ax.set_ylabel('Loss')
                 ax.set_title(f'Validation loss')
                 ax.legend()
             else:
-                ax.plot(history.history['val_accuracy'], label=f'{name} validation accuracy')
+                ax.plot(history['val_accuracy'], label=f'{name} validation accuracy')
                 ax.set_xlabel('Epoch')
                 ax.set_ylabel('Accuracy')
                 ax.set_title(f'Validation accuracy')
@@ -127,13 +127,13 @@ class ModelPlotter():
         for i in range(2):
             ax = axes[i]
             if (i == 0):
-                ax.plot(history.history['loss'], label=f'{name} training loss')
+                ax.plot(history['loss'], label=f'{name} training loss')
                 ax.set_xlabel('Epoch')
                 ax.set_ylabel('Loss')
                 ax.set_title(f'Training loss')
                 ax.legend()
-            elif 'val_loss' in history.history and i == 1:
-                ax.plot(history.history['val_loss'], label=f'{name} validation loss')
+            elif 'val_loss' in history and i == 1:
+                ax.plot(history['val_loss'], label=f'{name} validation loss')
                 ax.set_xlabel('Epoch')
                 ax.set_ylabel('Loss')
                 ax.set_title(f'Validation loss')
@@ -144,13 +144,13 @@ class ModelPlotter():
         for i in range(2):
             ax = axes[i]
             if (i == 0):
-                ax.plot(history.history['loss'], label=f'{name} training loss')
+                ax.plot(history['loss'], label=f'{name} training loss')
                 ax.set_xlabel('Epoch')
                 ax.set_ylabel('Loss')
                 ax.set_title(f'Training loss')
                 ax.legend()
             else:
-                ax.plot(history.history['accuracy'], label=f'{name} training accuracy')
+                ax.plot(history['accuracy'], label=f'{name} training accuracy')
                 ax.set_xlabel('Epoch')
                 ax.set_ylabel('Accuracy')
                 ax.set_title(f'Training accuracy')
@@ -159,7 +159,7 @@ class ModelPlotter():
     def create_subplots_1x1(self, history, axes, name):
         # Plot training loss
             ax = axes
-            ax.plot(history.history['loss'], label=f'{name} training loss')
+            ax.plot(history['loss'], label=f'{name} training loss')
             ax.set_xlabel('Epoch')
             ax.set_ylabel('Loss')
             ax.set_title(f'Training loss')

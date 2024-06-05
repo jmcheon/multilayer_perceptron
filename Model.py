@@ -14,10 +14,12 @@ class Model():
         create_network: Initializes the model architecture.
         save_topology: Saves the model topology to a file.
         save_parameters: Saves the model parameters to a file.
+        save_history: Saves the model history to a file.
 
+        get_topology: Retrieves the model topology.
+        set_topology: Sets the model topology.
         get_parameters: Retrieves the model parameters.
         set_parameters: Sets the model parameters.
-        get_topology: Retrieves the model topology.
 
         evaluate_metrics: Evaluates specified metrics on the model.
         create_mini_batch: Creates mini-batches from the training data.
@@ -48,18 +50,7 @@ class Model():
             layers = net
         elif isinstance(net, list) and all(isinstance(layer_data, dict) for layer_data in net):
             print("Creating a neural network...")
-            layers = []
-            for layer_data in net:
-                if layer_data['type'] == 'Dense':
-                    if 'weights_initializer' not in layer_data:
-                        layers.append(Dense(layer_data['shape'][0],
-                                                layer_data['shape'][1], 
-                                                activation=layer_data['activation']))
-                    else:
-                        layers.append(Dense(layer_data['shape'][0],
-                                                layer_data['shape'][1], 
-                                                activation=layer_data['activation'],
-                                                weights_initializer=layer_data['weights_initializer']))
+            layers = self.set_topology(net)
         else:
             raise TypeError("Invalid form of input to create a neural network.")
         self.layers = layers
@@ -98,6 +89,71 @@ class Model():
         np.savez(filepath, *parameters)
         print(f"> Saving model parameters to '{filepath}.npz'")
 
+    def save_history(self, filepath) -> None:
+        """
+        Saves the model history to a file.
+
+        Args:
+            filepath (str): Path to the file where model history will be saved.
+        """
+        history = self.history
+        np.savez(filepath, *history)
+        print(f"> Saving model history to '{filepath}.npz'")
+
+    def get_topology(self) -> list:
+        """
+        Retrieves the model topology.
+
+        Returns:
+            list: A list describing the model topology.
+        """
+        topology = []
+        model_data = {
+            'type': 'Model',
+            'shape': self.shape,
+            'name': self.name,
+            'n_layers': self.n_layers,
+        }
+        topology.append(model_data)
+        layers = []
+        for layer in self.layers:
+            if isinstance(layer, Dense):
+                layer_data = {
+                    'type': 'Dense',
+                    'shape': layer.shape,
+                    'activation': f'{type(layer.activation).__name__}',
+                    'weights_initializer': f'{layer.weights_initializer}',
+                }
+                layers.append(layer_data)
+        topology.extend(layers)
+        return topology
+
+    def set_topology(self, topology) -> list:
+        """
+        Sets the model topology.
+
+        Returns:
+            list: A list describing the model topology.
+        """
+        layers = []
+        for data in topology:
+            if data['type'] == 'Model':
+                self.shape = data['shape'] 
+                self.name = data['name']
+                self.n_layers = data['n_layers']
+            elif data['type'] == 'Dense':
+                if 'weights_initializer' not in data:
+                    layers.append(Dense(data['shape'][0],
+                                            data['shape'][1], 
+                                            activation=data['activation']))
+                else:
+                    layers.append(Dense(data['shape'][0],
+                                            data['shape'][1], 
+                                            activation=data['activation'],
+                                            weights_initializer=data['weights_initializer']))
+        self.layers = layers
+        return layers 
+
     def get_parameters(self) -> list[np.ndarray]:
         """
         Retrieves the model parameters.
@@ -131,26 +187,15 @@ class Model():
             if isinstance(layer, Dense):
                 layer.set_parameters(initial_parameters[index], initial_parameters[index + 1])
 
-    def get_topology(self) -> list:
-        """
-        Retrieves the model topology.
+    def __repr__(self) -> str:
+        topology = self.get_topology()
+        res = f"{self.name}(\n"
 
-        Returns:
-            list: A list describing the model topology.
-        """
-        layers = []
-        for layer in self.layers:
-            if isinstance(layer, Dense):
-                layer_data = {
-                    'type': 'Dense',
-                    'shape': layer.shape,
-                    #'input_shape': layer.shape[0],
-                    #'output_shape': layer.shape[1],
-                    'activation': f'{layer.activation.__name__}',
-                    'weights_initializer': f'{layer.weights_initializer}',
-                }
-                layers.append(layer_data)
-        return layers 
+        for topo in topology:
+            res += f"\t{topo['type']}({topo['shape']}, activation={topo['activation']})\n"
+        res += ")"
+
+        return res
 
     def evaluate_metrics(self, y, y_pred):
         """
