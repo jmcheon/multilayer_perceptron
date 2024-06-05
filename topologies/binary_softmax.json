@@ -1,26 +1,27 @@
 [
+  { "type": "Model", "shape": [30, 2], "name": "Model", "n_layers": 4 },
   {
     "type": "Dense",
     "shape": [30, 20],
-    "activation": "relu",
+    "activation": "ReLU",
     "weights_initializer": "glorot_uniform"
   },
   {
     "type": "Dense",
     "shape": [20, 10],
-    "activation": "relu",
+    "activation": "ReLU",
     "weights_initializer": "glorot_uniform"
   },
   {
     "type": "Dense",
     "shape": [10, 5],
-    "activation": "relu",
+    "activation": "ReLU",
     "weights_initializer": "glorot_uniform"
   },
   {
     "type": "Dense",
     "shape": [5, 2],
-    "activation": "softmax",
+    "activation": "Softmax",
     "weights_initializer": "glorot_uniform"
   }
 ]

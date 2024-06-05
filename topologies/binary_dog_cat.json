@@ -1,0 +1,38 @@
+[
+  {
+    "type": "Dense",
+    "shape": [4096, 3048],
+    "activation": "ReLU",
+    "weights_initializer": "glorot_uniform"
+  },
+  {
+    "type": "Dense",
+    "shape": [3048, 2048],
+    "activation": "ReLU",
+    "weights_initializer": "glorot_uniform"
+  },
+  {
+    "type": "Dense",
+    "shape": [2048, 1024],
+    "activation": "ReLU",
+    "weights_initializer": "glorot_uniform"
+  },
+  {
+    "type": "Dense",
+    "shape": [1024, 512],
+    "activation": "ReLU",
+    "weights_initializer": "glorot_uniform"
+  },
+  {
+    "type": "Dense",
+    "shape": [512, 64],
+    "activation": "ReLU",
+    "weights_initializer": "glorot_uniform"
+  },
+  {
+    "type": "Dense",
+    "shape": [64, 1],
+    "activation": "Sigmoid",
+    "weights_initializer": "glorot_uniform"
+  }
+]
