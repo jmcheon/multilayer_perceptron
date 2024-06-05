@@ -152,6 +152,8 @@ class Model():
                                             activation=data['activation'],
                                             weights_initializer=data['weights_initializer']))
         self.layers = layers
+        self.n_layers = len(layers)
+        self.shape = (layers[0].shape[0], layers[-1].shape[1])
         return layers 
 
     def get_parameters(self) -> list[np.ndarray]:
@@ -192,8 +194,9 @@ class Model():
         res = f"{self.name}(\n"
 
         for topo in topology:
-            res += f"\t{topo['type']}({topo['shape']}, activation={topo['activation']})\n"
-        res += ")"
+            if topo['type'] != 'Model': 
+                res += f"\t{topo['type']}({topo['shape']}, activation={topo['activation']})\n"
+            res += ")"
 
         return res
 
