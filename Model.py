@@ -2,8 +2,8 @@ import json
 
 import numpy as np
 
-from srcs.layers import Dense, Layer
-from srcs.metrics import accuracy_score, f1_score, precision_score, recall_score
+from multilayer_perceptron.srcs.layers import Dense, Layer
+from multilayer_perceptron.srcs.metrics import accuracy_score, f1_score, precision_score, recall_score
 
 
 class Model():

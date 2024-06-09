@@ -1,7 +1,7 @@
 import numpy as np
 
-import srcs.activations as activations
-import srcs.initializers as initializers
+import multilayer_perceptron.srcs.activations as activations
+import multilayer_perceptron.srcs.initializers as initializers
 
 
 class Layer:

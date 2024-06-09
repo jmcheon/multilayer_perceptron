@@ -1,8 +1,8 @@
 import numpy as np
 
-import srcs.optimizers as optimizers
-import srcs.losses as losses
-from Model import Model
+import multilayer_perceptron.srcs.optimizers as optimizers
+import multilayer_perceptron.srcs.losses as losses
+from multilayer_perceptron.Model import Model
 
 
 class NeuralNet(Model):
