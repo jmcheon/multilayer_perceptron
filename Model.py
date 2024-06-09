@@ -196,7 +196,7 @@ class Model():
         for topo in topology:
             if topo['type'] != 'Model': 
                 res += f"\t{topo['type']}({topo['shape']}, activation={topo['activation']})\n"
-            res += ")"
+        res += ")"
 
         return res
 

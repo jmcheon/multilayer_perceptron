@@ -1,8 +1,9 @@
-import config
-import srcs.optimizers as optimizers
-from NeuralNet import NeuralNet
-from srcs.layers import Dense
-from srcs.utils import load_split_data, load_parameters
+import multilayer_perceptron.config as config
+import multilayer_perceptron.srcs.optimizers as optimizers
+
+from multilayer_perceptron.NeuralNet import NeuralNet
+from multilayer_perceptron.srcs.layers import Dense
+from multilayer_perceptron.srcs.utils import load_split_data, load_parameters
                         
 
 
