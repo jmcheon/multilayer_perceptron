@@ -1,15 +1,19 @@
 import argparse
 import sys, os
 
-import config
-from srcs.metrics import accuracy_score
-import srcs.optimizers as optimizers
-from Model import Model
-from NeuralNet import NeuralNet
-from ModelPlotter import ModelPlotter
-from ModelTrainer import ModelTrainer
-from srcs.utils import load_topology, load_split_data, load_parameters, split_dataset_save
-import srcs.losses as losses
+path = os.path.join(os.path.dirname(__file__), '..', '')
+sys.path.insert(1, path)
+
+from multilayer_perceptron.Model import Model
+from multilayer_perceptron.NeuralNet import NeuralNet
+from multilayer_perceptron.ModelPlotter import ModelPlotter
+from multilayer_perceptron.ModelTrainer import ModelTrainer
+from multilayer_perceptron.srcs.utils import load_topology, load_split_data, load_parameters, split_dataset_save
+from multilayer_perceptron.srcs.metrics import accuracy_score
+
+import multilayer_perceptron.config as config
+import multilayer_perceptron.srcs.losses as losses
+import multilayer_perceptron.srcs.optimizers as optimizers
 
 
 def prediction(filename):

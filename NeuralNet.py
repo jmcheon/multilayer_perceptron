@@ -109,6 +109,7 @@ class NeuralNet(Model):
             x, 
             y, 
             batch_size, 
+            epochs=1,
             validation_data=None):
         """
         Trains the model on the provided data.
@@ -125,6 +126,21 @@ class NeuralNet(Model):
         if self._is_compiled == False:
             raise RuntimeError("You must compile your model before training/testing. Use `model.compile(optimizer, loss)")
 
+        for epoch in range(epochs):
+            padding_width = len(str(epochs))
+            print(f'\nEpoch {epoch + 1:0{padding_width}d}/{epochs}', end="")
+            self.train(x, y, validation_data=validation_data,
+                       batch_size=batch_size)
+            self.print_history()
+        print()
+
+        return self
+
+    def train(self,
+              x,
+              y,
+              batch_size,
+              validation_data=None):
         y_train_batch = np.empty((0, self.shape[1]))
         y_train_pred = np.empty((0, self.shape[1]))
         for x_batch, y_batch in self.create_mini_batches(x, y, batch_size):
@@ -155,7 +171,6 @@ class NeuralNet(Model):
             val_loss = self.loss.loss(y_val, y_val_pred)
             self.history['val_loss'].append(val_loss)
             self.update_history(y_val, self.predict(y_val_pred, True), validation_data)
-        self.print_history()
 
         return self
 

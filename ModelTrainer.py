@@ -105,17 +105,9 @@ class ModelTrainer():
         """
 
         model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
-    
-        # print('x_train shape :', x_train.shape)
-        # print('y_train shape :', y_train.shape)
-        for epoch in range(epochs):
-            padding_width = len(str(epochs))
-            print(f'\nEpoch {epoch + 1:0{padding_width}d}/{epochs}', end="")
-
-            model.fit(
+        model.fit(
                 x_train, y_train, validation_data=validation_data, 
-                batch_size=batch_size)
-        print()
+                batch_size=batch_size, epochs=epochs)
 
         model_name = f"{model.name} + {model.optimizer.name}"
         return model.history, model_name
