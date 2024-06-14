@@ -59,6 +59,8 @@ class Model():
 
         if name:
             self.name = name
+        self.history = {}
+        self.metrics = []
 
         return layers
 
