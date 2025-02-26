@@ -8,17 +8,18 @@ from sklearn.preprocessing import StandardScaler
 
 def load_parameters(filename):
     try:
-        loaded = np.load(filename + '.npz', allow_pickle=True)
-        parameters = [loaded[f'arr_{i}'] for i in range(len(loaded.files))]
+        loaded = np.load(filename + ".npz", allow_pickle=True)
+        parameters = [loaded[f"arr_{i}"] for i in range(len(loaded.files))]
 
     except:
         print(f"Input file errer: {filename} doesn't exist.")
         sys.exit()
     return parameters
 
+
 def load_topology(filename):
     try:
-        with open(filename, 'r') as file:
+        with open(filename, "r") as file:
             config_data = json.load(file)
     except json.JSONDecodeError as e:
         print(f"Failed to decode JSON: {e}")
@@ -34,11 +35,12 @@ def load_topology(filename):
         sys.exit()
     return config_data
 
+
 def split_dataset_save(filename, train_file, val_file, train_size=0.8, random_state=None):
     df = load_df(filename)
 
     train_data_np, val_data_np = data_spliter(df.values, train_size, random_state)
-    
+
     train_data = pd.DataFrame(train_data_np)
     val_data = pd.DataFrame(val_data_np)
 
@@ -49,14 +51,15 @@ def split_dataset_save(filename, train_file, val_file, train_size=0.8, random_st
     print(f"Saved train data to {train_file}")
     print(f"Saved validation data to {val_file}")
 
+
 def data_spliter(data, proportion, random_state=None):
     for v in [data]:
         if not isinstance(v, np.ndarray):
-            print(f"Invalid input: argument {v} of ndarray type required")	
+            print(f"Invalid input: argument {v} of ndarray type required")
             return None
-    
+
     if not isinstance(proportion, float):
-        print(f"Invalid input: argument proportion of float type required")	
+        print("Invalid input: argument proportion of float type required")
         return None
 
     if random_state is not None:
@@ -66,7 +69,8 @@ def data_spliter(data, proportion, random_state=None):
 
     p = int(data.shape[0] * proportion)
     data_train, data_valid = data[:p], data[p:]
-    return data_train, data_valid 
+    return data_train, data_valid
+
 
 def load_df(filename):
     try:
@@ -78,6 +82,7 @@ def load_df(filename):
         print(f"Invalid file error: {filename}")
         sys.exit()
     return df
+
 
 def load_split_data(filename):
     df = load_df(filename)
@@ -92,9 +97,9 @@ def load_split_data(filename):
 
     # Normalize the data
     scaler = StandardScaler()
-    x = scaler.fit_transform(x).astype('float32')
-    #y = one_hot_encode_binary_labels(y)
-    y = y.reshape(-1, 1).astype('float32')
+    x = scaler.fit_transform(x).astype("float32")
+    # y = one_hot_encode_binary_labels(y)
+    y = y.reshape(-1, 1).astype("float32")
     # config.n_classes = len(np.unique(y))
 
     return x, y

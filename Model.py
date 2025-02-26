@@ -3,10 +3,15 @@ import json
 import numpy as np
 
 from multilayer_perceptron.srcs.layers import Dense, Layer
-from multilayer_perceptron.srcs.metrics import accuracy_score, f1_score, precision_score, recall_score
+from multilayer_perceptron.srcs.metrics import (
+    accuracy_score,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 
 
-class Model():
+class Model:
     """
     Base Model Class.
 
@@ -23,15 +28,16 @@ class Model():
 
         evaluate_metrics: Evaluates specified metrics on the model.
         create_mini_batch: Creates mini-batches from the training data.
-        one_hot_encode_labels: Creates one hot encoded labels 
+        one_hot_encode_labels: Creates one hot encoded labels
 
         print_history: Prints the training history.
         update_history: Updates the training history with new metrics.
     """
+
     def __init__(self, name="Model"):
         self.shape = None
         self.layers = None
-        self.n_layers = 0 
+        self.n_layers = 0
         self.history = {}
         self.metrics = []
         self.name = name
@@ -74,7 +80,7 @@ class Model():
         topology = self.get_topology()
         # print(f"filepaht: {filepath}, for model topology")
         # Save model topology as a JSON file
-        with open(filepath + ".json", 'w') as json_file:
+        with open(filepath + ".json", "w") as json_file:
             json.dump(topology, json_file)
             print(f"> Saving model configuration to '{filepath}.json'")
 
@@ -111,20 +117,20 @@ class Model():
         """
         topology = []
         model_data = {
-            'type': 'Model',
-            'shape': self.shape,
-            'name': self.name,
-            'n_layers': self.n_layers,
+            "type": "Model",
+            "shape": self.shape,
+            "name": self.name,
+            "n_layers": self.n_layers,
         }
         topology.append(model_data)
         layers = []
         for layer in self.layers:
             if isinstance(layer, Dense):
                 layer_data = {
-                    'type': 'Dense',
-                    'shape': layer.shape,
-                    'activation': f'{type(layer.activation).__name__}',
-                    'weights_initializer': f'{layer.weights_initializer}',
+                    "type": "Dense",
+                    "shape": layer.shape,
+                    "activation": f"{type(layer.activation).__name__}",
+                    "weights_initializer": f"{layer.weights_initializer}",
                 }
                 layers.append(layer_data)
         topology.extend(layers)
@@ -139,24 +145,28 @@ class Model():
         """
         layers = []
         for data in topology:
-            if data['type'] == 'Model':
-                self.shape = data['shape'] 
-                self.name = data['name']
-                self.n_layers = data['n_layers']
-            elif data['type'] == 'Dense':
-                if 'weights_initializer' not in data:
-                    layers.append(Dense(data['shape'][0],
-                                            data['shape'][1], 
-                                            activation=data['activation']))
+            if data["type"] == "Model":
+                self.shape = data["shape"]
+                self.name = data["name"]
+                self.n_layers = data["n_layers"]
+            elif data["type"] == "Dense":
+                if "weights_initializer" not in data:
+                    layers.append(
+                        Dense(data["shape"][0], data["shape"][1], activation=data["activation"])
+                    )
                 else:
-                    layers.append(Dense(data['shape'][0],
-                                            data['shape'][1], 
-                                            activation=data['activation'],
-                                            weights_initializer=data['weights_initializer']))
+                    layers.append(
+                        Dense(
+                            data["shape"][0],
+                            data["shape"][1],
+                            activation=data["activation"],
+                            weights_initializer=data["weights_initializer"],
+                        )
+                    )
         self.layers = layers
         self.n_layers = len(layers)
         self.shape = (layers[0].shape[0], layers[-1].shape[1])
-        return layers 
+        return layers
 
     def get_parameters(self) -> list[np.ndarray]:
         """
@@ -196,7 +206,7 @@ class Model():
         res = f"{self.name}(\n"
 
         for topo in topology:
-            if topo['type'] != 'Model': 
+            if topo["type"] != "Model":
                 res += f"\t{topo['type']}({topo['shape']}, activation={topo['activation']})\n"
         res += ")"
 
@@ -238,7 +248,7 @@ class Model():
 
         if batch_size:
             for start_idx in range(0, x.shape[0] - batch_size + 1, batch_size):
-                batch_idx = indices[start_idx:start_idx + batch_size]
+                batch_idx = indices[start_idx : start_idx + batch_size]
                 yield x[batch_idx], y[batch_idx]
         else:
             yield x, y
@@ -290,9 +300,9 @@ class Model():
             valid = "val_"
         else:
             valid = ""
-        if 'accuracy' in self.metrics:
-            self.history[valid + 'accuracy'].append(accuracy)
-        if 'Precision' in self.metrics:
-            self.history[valid + 'precision'].append(precision)
-        if 'Recall' in self.metrics:
-            self.history[valid + 'recall'].append(recall)
+        if "accuracy" in self.metrics:
+            self.history[valid + "accuracy"].append(accuracy)
+        if "Precision" in self.metrics:
+            self.history[valid + "precision"].append(precision)
+        if "Recall" in self.metrics:
+            self.history[valid + "recall"].append(recall)

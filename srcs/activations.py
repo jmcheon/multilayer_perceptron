@@ -1,10 +1,13 @@
 from abc import abstractmethod
+
 import numpy as np
+
 
 class Activation:
     """
     Class to be inherited by activation functions.
     """
+
     @abstractmethod
     def f(self, x):
         """
@@ -19,10 +22,12 @@ class Activation:
         """
         pass
 
+
 class Sigmoid(Activation):
     """
     Sigmoid activation.
     """
+
     def f(self, x):
         return 1 / (1 + np.exp(np.clip(-x, -709, 709)))
 
@@ -34,6 +39,7 @@ class Softmax(Activation):
     """
     Softmax activation.
     """
+
     def f(self, x):
         exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
         return exp_x / np.sum(exp_x, axis=1, keepdims=True)
@@ -47,10 +53,12 @@ class Softmax(Activation):
             dinputs[index] = np.dot(jacobian_matrix, single_grad)
         return dinputs
 
+
 class ReLU(Activation):
     """
     Rectified Linear Unit.
     """
+
     def __init__(self, leaky_param=0.1):
         self.alpha = leaky_param
 
@@ -61,10 +69,12 @@ class ReLU(Activation):
         gradients[outputs <= 0] = 0
         return gradients
 
+
 class LeakyReLU(Activation):
     """
     Leaky Rectified Linear Unit.
     """
+
     def __init__(self, leaky_param=0.1):
         self.alpha = leaky_param
 

@@ -12,8 +12,6 @@
 
 This project is based on the multilayer perceptron from 42 Paris, and I have added more functionalities. For those who want to refer to this project within the scope of 42, here is the link to the [multilayer perceptron - 42 Project](https://github.com/jmcheon/multilayer_perceptron/tree/42v2.0).
 
-I have another GitHub repository called [`data_science`](https://github.com/jmcheon/data_science) for any additional use cases involving the `multilayer_perceptron` project."
-
 </br>
 
 ## 1. Dataset
@@ -122,7 +120,7 @@ network = model.create_network([
 | loss, accuracy for training and validation                                                                                |
 | ------------------------------------------------------------------------------------------------------------------------- |
 | ![learning_curves](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/36faa30e-57ea-4043-80f6-b66ad092fe1e) |
-|Train accuracy: 0.9845 Validation accuracy: 0.9912|
+| Train accuracy: 0.9845 Validation accuracy: 0.9912                                                                        |
 
 ---
 
@@ -158,9 +156,9 @@ loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=50
 | models                                                                                                           |
 | ---------------------------------------------------------------------------------------------------------------- |
 | ![models](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/accc3f5d-06c9-441b-89cd-1272494d9f5d) |
-|Model1 - Train accuracy: 0.9604 Validation accuracy: 0.9736|
-|Model2 - Train accuracy: 0.9560 Validation accuracy: 0.9824|
-|Model3 - Train accuracy: 0.8879 Validation accuracy: 0.8771|
+| Model1 - Train accuracy: 0.9604 Validation accuracy: 0.9736                                                      |
+| Model2 - Train accuracy: 0.9560 Validation accuracy: 0.9824                                                      |
+| Model3 - Train accuracy: 0.8879 Validation accuracy: 0.8771                                                      |
 
 ### Optimizers - SGD, RMSprop, Adam
 
@@ -187,6 +185,6 @@ loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=30
 | optimizers                                                                                                           |
 | -------------------------------------------------------------------------------------------------------------------- |
 | ![optimizers](https://github.com/jmcheon/multilayer_perceptron/assets/40683323/c1a78d9d-1e9f-431a-b560-ee880e751350) |
-|Model1 - Train accuracy: 0.9318 Validation accuracy: 0.9473|
-|Model2 - Train accuracy: 0.9340 Validation accuracy: 0.9649|
-|Model2 - Train accuracy: 0.9582 Validation accuracy: 0.9561|
+| Model1 - Train accuracy: 0.9318 Validation accuracy: 0.9473                                                          |
+| Model2 - Train accuracy: 0.9340 Validation accuracy: 0.9649                                                          |
+| Model2 - Train accuracy: 0.9582 Validation accuracy: 0.9561                                                          |

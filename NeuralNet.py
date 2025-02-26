@@ -1,7 +1,7 @@
 import numpy as np
 
-import multilayer_perceptron.srcs.optimizers as optimizers
 import multilayer_perceptron.srcs.losses as losses
+import multilayer_perceptron.srcs.optimizers as optimizers
 from multilayer_perceptron.Model import Model
 
 
@@ -16,6 +16,7 @@ class NeuralNet(Model):
         fit: Trains the model on the provided data.
         predict: Makes predictions using the trained model.
     """
+
     def __init__(self, name="Model"):
         super().__init__(name)
         self._is_compiled = False
@@ -62,11 +63,12 @@ class NeuralNet(Model):
 
         return gradients
 
-    def compile(self, 
-                optimizer='rmsprop', 
-                loss=None, 
-                metrics=None, 
-        ):
+    def compile(
+        self,
+        optimizer="rmsprop",
+        loss=None,
+        metrics=None,
+    ):
         """
         Compiles the model with specified loss and optimizer.
 
@@ -81,22 +83,24 @@ class NeuralNet(Model):
 
         if isinstance(optimizer, optimizers.Optimizer):
             self.optimizer = optimizer
-        elif optimizer == 'sgd':
+        elif optimizer == "sgd":
             self.optimizer = optimizers.SGD()
-        elif optimizer == 'rmsprop':
+        elif optimizer == "rmsprop":
             self.optimizer = optimizers.RMSprop()
 
         if not loss:
-            raise ValueError("No loss found. You may have forgotten to provide a `loss` argument in the `compile()` method.")
-        elif loss == 'binary_crossentropy':
+            raise ValueError(
+                "No loss found. You may have forgotten to provide a `loss` argument in the `compile()` method."
+            )
+        elif loss == "binary_crossentropy":
             self.loss = losses.BCELoss()
-            self.history['loss'] = []
-        elif loss == 'mse':
+            self.history["loss"] = []
+        elif loss == "mse":
             self.loss = losses.MSELoss()
-            self.history['loss'] = []
+            self.history["loss"] = []
         elif isinstance(loss, losses.Loss):
             self.loss = loss
-            self.history['loss'] = []
+            self.history["loss"] = []
 
         if metrics:
             self.metrics = metrics
@@ -105,12 +109,7 @@ class NeuralNet(Model):
 
         self._is_compiled = True
 
-    def fit(self, 
-            x, 
-            y, 
-            batch_size, 
-            epochs=1,
-            validation_data=None):
+    def fit(self, x, y, batch_size, epochs=1, validation_data=None):
         """
         Trains the model on the provided data.
 
@@ -124,23 +123,20 @@ class NeuralNet(Model):
             self: returns the instance itself.
         """
         if self._is_compiled == False:
-            raise RuntimeError("You must compile your model before training/testing. Use `model.compile(optimizer, loss)")
+            raise RuntimeError(
+                "You must compile your model before training/testing. Use `model.compile(optimizer, loss)"
+            )
 
         for epoch in range(epochs):
             padding_width = len(str(epochs))
-            print(f'\nEpoch {epoch + 1:0{padding_width}d}/{epochs}', end="")
-            self.train(x, y, validation_data=validation_data,
-                       batch_size=batch_size)
+            print(f"\nEpoch {epoch + 1:0{padding_width}d}/{epochs}", end="")
+            self.train(x, y, validation_data=validation_data, batch_size=batch_size)
             self.print_history()
         print()
 
         return self
 
-    def train(self,
-              x,
-              y,
-              batch_size,
-              validation_data=None):
+    def train(self, x, y, batch_size, validation_data=None):
         y_train_batch = np.empty((0, self.shape[1]))
         y_train_pred = np.empty((0, self.shape[1]))
         for x_batch, y_batch in self.create_mini_batches(x, y, batch_size):
@@ -153,23 +149,22 @@ class NeuralNet(Model):
 
         total_loss = self.loss.loss(y_train_batch, y_train_pred)
         self.update_history(y_train_batch, self.predict(y_train_pred, True))
-        self.history['loss'].append(total_loss)
-
+        self.history["loss"].append(total_loss)
 
         # Calculate validation loss and accuracy
         if validation_data:
             if not isinstance(validation_data, tuple):
                 raise TypeError("tuple validation_data is needed.")
             x_val, y_val = validation_data
-            if 'val_loss' not in self.history:
-                self.history['val_loss'] = []
+            if "val_loss" not in self.history:
+                self.history["val_loss"] = []
                 for metric in self.metrics:
                     self.history[f"val_{metric.lower()}"] = []
 
             y_val_pred = self.forward(x_val)
             y_val = self.one_hot_encode_labels(y_val)
             val_loss = self.loss.loss(y_val, y_val_pred)
-            self.history['val_loss'].append(val_loss)
+            self.history["val_loss"].append(val_loss)
             self.update_history(y_val, self.predict(y_val_pred, True), validation_data)
 
         return self
