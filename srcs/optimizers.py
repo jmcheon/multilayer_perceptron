@@ -15,6 +15,11 @@ class Optimizer:
                 1.0 / (1.0 + self.decay * self.iterations)
             )
 
+    def compute_gradients(self, layer, prev_layer_output):
+        dweights = np.dot(prev_layer_output, layer.deltas)
+        dbias = np.sum(layer.deltas, axis=0, keepdims=True)
+        return dweights, dbias
+
     def update_params(self, layer):
         pass
 
@@ -28,8 +33,7 @@ class SGD(Optimizer):
         self.name = name
 
     def update_params(self, layer, prev_layer_output):
-        dweights = np.dot(prev_layer_output, layer.deltas)
-        dbias = np.sum(layer.deltas, axis=0, keepdims=True)
+        dweights, dbias = self.compute_gradients(layer, prev_layer_output)
         """
         print('dbias shape:', dbias.shape)
         print('prev_layer_output shape:', prev_layer_output.shape)
@@ -74,8 +78,7 @@ class RMSprop(Optimizer):
         self.name = name
 
     def update_params(self, layer, prev_layer_output):
-        dweights = np.dot(prev_layer_output, layer.deltas)
-        dbias = np.sum(layer.deltas, axis=0, keepdims=True)
+        dweights, dbias = self.compute_gradients(layer, prev_layer_output)
 
         # If layer does not contain cache arrays,
         # create them filled with zeros
@@ -108,8 +111,7 @@ class Adam(Optimizer):
         self.name = name
 
     def update_params(self, layer, prev_layer_output):
-        dweights = np.dot(prev_layer_output, layer.deltas)
-        dbias = np.sum(layer.deltas, axis=0, keepdims=True)
+        dweights, dbias = self.compute_gradients(layer, prev_layer_output)
         # If layer does not contain cache arrays,
         # create them filled with zeros
         if not hasattr(layer, "weight_cache"):
