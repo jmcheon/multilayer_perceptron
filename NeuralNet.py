@@ -47,21 +47,17 @@ class NeuralNet(Model):
         Returns:
             dict: Gradients of the network parameters.
         """
-        gradients = {}
-        loss_gradient = self.loss.dloss(y, y_pred)
+        current_grads = self.loss.dloss(y, y_pred)
 
         self.optimizer.pre_update_params()
         for l in reversed(range(self.n_layers)):
-            # print("dloss:", loss_gradient.shape, l)
-            self.layers[l].set_activation_gradient(loss_gradient)
-            loss_gradient = np.dot(self.layers[l].deltas, self.layers[l].weights.T)
+            # print("dloss:", current_grads.shape, l)
+            current_grads = self.layer[l].backward(current_grads)
             if l > 0:
                 self.optimizer.update_params(self.layers[l], self.layers[l - 1].outputs.T)
             else:
                 self.optimizer.update_params(self.layers[l], self.layers[0].inputs.T)
         self.optimizer.post_update_params()
-
-        return gradients
 
     def compile(
         self,

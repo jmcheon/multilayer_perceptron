@@ -11,12 +11,12 @@ class Activation:
     @abstractmethod
     def f(self, x):
         """
-        Method that implements the function.
+        Method that implements the activation function.
         """
         pass
 
     @abstractmethod
-    def df(self, x):
+    def df(self, x, gradients):
         """
         Derivative of the function with respect to its input.
         """
@@ -59,9 +59,6 @@ class ReLU(Activation):
     Rectified Linear Unit.
     """
 
-    def __init__(self, leaky_param=0.1):
-        self.alpha = leaky_param
-
     def f(self, x):
         return np.maximum(0, x)
 
@@ -81,5 +78,6 @@ class LeakyReLU(Activation):
     def f(self, x):
         return np.maximum(x, x * self.alpha)
 
-    def df(self, x):
-        return np.maximum(x > 0, self.alpha)
+    def df(self, x, gradients):
+        gradients[x <= 0] *= self.alpha
+        return gradients

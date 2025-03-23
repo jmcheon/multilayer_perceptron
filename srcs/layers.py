@@ -47,7 +47,7 @@ class Layer:
     def forward(self, x):
         pass
 
-    def backward(self, output_gradient, alpha):
+    def backward(self, output_gradient):
         pass
 
 
@@ -72,12 +72,15 @@ class Dense(Layer):
         self.weights = weights
         self.bias = bias
 
-    def set_activation_gradient(self, gradients):
-        self.deltas = self.activation.df(self.outputs, gradients)
-
     def forward(self, input_data):
         self.inputs = input_data
         z = np.dot(self.inputs, self.weights) + self.bias
         self.z = z
         self.outputs = self.activation.f(z)
         return self.outputs
+
+    def backward(self, gradients):
+        self.deltas = self.activation.df(self.outputs, gradients)
+        # dL/dinputs
+        grads = np.dot(self.deltas, self.weights.T)
+        return grads
