@@ -30,6 +30,8 @@ class Sigmoid(Activation):
     """
     Sigmoid activation.
     """
+    def __init__(self, name="Sigmoid"):
+        self.name = name
 
     def forward(self, x):
         return 1 / (1 + np.exp(np.clip(-x, -709, 709)))
@@ -42,6 +44,8 @@ class Softmax(Activation):
     """
     Softmax activation.
     """
+    def __init__(self, name="Softmax"):
+        self.name = name
 
     def forward(self, x):
         exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
@@ -61,6 +65,8 @@ class ReLU(Activation):
     """
     Rectified Linear Unit.
     """
+    def __init__(self, name="ReLU"):
+        self.name = name
 
     def forward(self, x):
         return np.maximum(0, x)
@@ -75,8 +81,9 @@ class LeakyReLU(Activation):
     Leaky Rectified Linear Unit.
     """
 
-    def __init__(self, leaky_param=0.1):
+    def __init__(self, leaky_param=0.1, name="Leaky ReLU"):
         self.alpha = leaky_param
+        self.name = name
 
     def forward(self, x):
         return np.maximum(x, x * self.alpha)

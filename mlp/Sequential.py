@@ -1,6 +1,7 @@
 from typing import List
 
-from mlp.layers import Dense
+from mlp.activations import Activation
+from mlp.layers import Dense, Linear
 from mlp.module import Module
 
 
@@ -9,7 +10,6 @@ class Sequential(Module):
         super().__init__()
         self.layers = layers
         self.name = name
-        self.shape = (layers[0].shape[0], layers[-1].shape[1])
 
     def forward(self, x):
         for layer in self.layers:
@@ -27,7 +27,8 @@ class Sequential(Module):
         parameters = []
 
         for layer in self.layers:
-            parameters += layer.parameters()
+            if hasattr(layer, "weights"):
+                parameters += layer.parameters()
 
         return parameters
 
@@ -45,7 +46,7 @@ class Sequential(Module):
         topology = []
         model_data = {
             "type": "Model",
-            "shape": self.shape,
+            # "shape": self.shape,
             "name": self.name,
             "n_layers": len(self.layers),
         }
@@ -60,6 +61,15 @@ class Sequential(Module):
                     "initializer": f"{layer.initializer}",
                 }
                 layers.append(layer_data)
+            if isinstance(layer, Linear):
+                layer_data = {
+                    "type": "Linear",
+                    "shape": layer.shape,
+                }
+                layers.append(layer_data)
+            if isinstance(layer, Activation):
+                layer_data = {"type": "Activation", "name": layer.name}
+                layers.append(layer_data)
         topology.extend(layers)
         return topology
 
@@ -67,9 +77,13 @@ class Sequential(Module):
         topology = self.get_topology()
         res = f"{self.name}(\n"
 
-        for topo in topology:
-            if topo["type"] != "Model":
-                res += f"\t{topo['type']}({topo['shape']}, activation={topo['activation']})\n"
+        for layer in topology:
+            if layer["type"] == "Dense":
+                res += f"\t{layer['type']}({layer['shape']}, {layer['activation']})\n"
+            if layer["type"] == "Linear":
+                res += f"\t{layer['type']}({layer['shape']})\n"
+            if layer["type"] == "Activation":
+                res += f"\t{layer['name']}()\n"
         res += ")"
 
         return res

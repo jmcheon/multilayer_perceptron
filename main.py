@@ -5,19 +5,19 @@ import sys
 path = os.path.join(os.path.dirname(__file__), "..", "")
 sys.path.insert(1, path)
 
-import multilayer_perceptron.config as config
-import multilayer_perceptron.srcs.optimizers as optimizers
-from multilayer_perceptron.Model import Model
-from multilayer_perceptron.ModelPlotter import ModelPlotter
-from multilayer_perceptron.ModelTrainer import ModelTrainer
-from multilayer_perceptron.NeuralNet import NeuralNet
-from multilayer_perceptron.srcs.metrics import accuracy_score
-from multilayer_perceptron.srcs.utils import (
+import config as config
+import mlp.optimizers as optimizers
+from mlp.metrics import accuracy_score
+from mlp.utils import (
     load_parameters,
     load_split_data,
     load_topology,
     split_dataset_save,
 )
+from Model import Model
+from ModelPlotter import ModelPlotter
+from ModelTrainer import ModelTrainer
+from NeuralNet import NeuralNet
 
 
 def prediction(filename):
