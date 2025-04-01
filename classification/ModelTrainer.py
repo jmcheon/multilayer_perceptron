@@ -1,8 +1,8 @@
 import multilayer_perceptron.config as config
-import multilayer_perceptron.srcs.optimizers as optimizers
+import multilayer_perceptron.mlp.optimizers as optimizers
 from multilayer_perceptron.NeuralNet import NeuralNet
-from multilayer_perceptron.srcs.layers import Dense
-from multilayer_perceptron.srcs.utils import load_parameters, load_split_data
+from multilayer_perceptron.mlp.layers import Dense
+from multilayer_perceptron.mlp.utils import load_parameters, load_split_data
 
 
 class ModelTrainer:
@@ -26,8 +26,8 @@ class ModelTrainer:
         else:
             raise TypeError("Invalid form of input to create a neural network.")
 
-    def create_default_model(self, model: NeuralNet):
-        network = model(
+    def create_default_model(self):
+        model = NeuralNet(
             [
                 Dense(self.shape[0], 20, activation="relu"),
                 Dense(20, 10, activation="relu"),
@@ -48,11 +48,10 @@ class ModelTrainer:
         return model
 
     def create_model(self, topology=None):
-        model = NeuralNet()
         if topology:
-            network = model(topology)
+            model = NeuralNet(topology)
         else:
-            model = self.create_default_model(model)
+            model = self.create_default_model()
         self.model_list.append(model)
         return model
 

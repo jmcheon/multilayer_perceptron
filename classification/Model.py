@@ -2,7 +2,8 @@ import json
 from typing import List
 
 import numpy as np
-from mlp.layers import Dense
+from mlp.activations import Activation, ReLU, Sigmoid
+from mlp.layers import Dense, Linear
 from mlp.metrics import (
     accuracy_score,
     f1_score,
@@ -90,7 +91,7 @@ class Model:
         """
         # print(f"filepaht: {filepath}, for model parameters")
         # Save model parameters as a .npz file
-        parameters = self.get_parameters()
+        parameters = self.parameters()
         np.savez(filepath, *parameters)
         print(f"> Saving model parameters to '{filepath}.npz'")
 
@@ -115,7 +116,7 @@ class Model:
         topology = []
         model_data = {
             "type": "Model",
-            "shape": self.shape,
+            # "shape": self.shape,
             "name": self.name,
             "n_layers": self.n_layers,
         }
@@ -130,6 +131,16 @@ class Model:
                     "initializer": f"{layer.initializer}",
                 }
                 layers.append(layer_data)
+            if isinstance(layer, Linear):
+                layer_data = {
+                    "type": "Linear",
+                    "shape": layer.shape,
+                    # "initializer": f"{layer.initializer}",
+                }
+                layers.append(layer_data)
+            if isinstance(layer, Activation):
+                layer_data = {"type": "Activation", "name": layer.name}
+                layers.append(layer_data)
         topology.extend(layers)
         return topology
 
@@ -143,7 +154,7 @@ class Model:
         layers = []
         for data in topology:
             if data["type"] == "Model":
-                self.shape = data["shape"]
+                # self.shape = data["shape"]
                 self.name = data["name"]
                 self.n_layers = data["n_layers"]
             elif data["type"] == "Dense":
@@ -160,6 +171,19 @@ class Model:
                             initializer=data["initializer"],
                         )
                     )
+            elif data["type"] == "Linear":
+                layers.append(
+                    Linear(
+                        data["shape"][0],
+                        data["shape"][1],
+                        # initializer=data["initializer"],
+                    )
+                )
+            elif data["type"] == "Activation":
+                if data["name"] == "Sigmoid":
+                    layers.append(Sigmoid())
+                if data["name"] == "ReLU":
+                    layers.append(ReLU())
         self.layers = layers
         self.n_layers = len(layers)
         self.shape = (layers[0].shape[0], layers[-1].shape[1])
@@ -201,9 +225,13 @@ class Model:
         topology = self.get_topology()
         res = f"{self.name}(\n"
 
-        for topo in topology:
-            if topo["type"] != "Model":
-                res += f"\t{topo['type']}({topo['shape']}, activation={topo['activation']})\n"
+        for layer in topology:
+            if layer["type"] == "Dense":
+                res += f"\t{layer['type']}({layer['shape']}, {layer['activation']})\n"
+            if layer["type"] == "Linear":
+                res += f"\t{layer['type']}({layer['shape']})\n"
+            if layer["type"] == "Activation":
+                res += f"\t{layer['name']}()\n"
         res += ")"
 
         return res

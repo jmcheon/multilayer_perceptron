@@ -1,6 +1,7 @@
 import mlp.losses as losses
 import mlp.optimizers as optimizers
 import numpy as np
+from mlp.layers import Dense, Linear
 from Model import Model
 
 
@@ -54,11 +55,9 @@ class NeuralNet(Model):
         self.optimizer.pre_update_params()
         for l in reversed(range(self.n_layers)):
             # print("dloss:", current_grads.shape, l)
-            current_grads = self.layer[l].backward(current_grads)
-            if l > 0:
-                self.optimizer.update_params(self.layers[l], self.layers[l - 1].outputs.T)
-            else:
-                self.optimizer.update_params(self.layers[l], self.layers[0].inputs.T)
+            current_grads = self.layers[l].backward(current_grads)
+            if isinstance(self.layers[l], Dense) or isinstance(self.layers[l], Linear):
+                self.optimizer.update_params(self.layers[l])
         self.optimizer.post_update_params()
 
     def compile(

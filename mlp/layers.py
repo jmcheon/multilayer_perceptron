@@ -1,6 +1,7 @@
+import numpy as np
+
 import mlp.activations as activations
 import mlp.initializers as initializers
-import numpy as np
 from mlp.module import Module
 
 
@@ -88,8 +89,10 @@ class Dense(Layer):
         self.outputs = self.activation(z)
         return self.outputs
 
-    def backward(self, gradients):
-        self.deltas = self.activation.backward(self.outputs, gradients)
+    def backward(self, grad_output):
+        self.deltas = self.activation.backward(grad_output)
+        self.dweights = np.dot(self.inputs.T, self.deltas)
+        self.dbiases = np.sum(self.deltas, axis=0, keepdims=True)
         # dL/dinputs
         grads = np.dot(self.deltas, self.weights.T)
         return grads
@@ -104,6 +107,7 @@ class Dense(Layer):
 
 class Linear(Module):
     def __init__(self, in_features, out_features, initializer=initializers.glorot_uniform):
+        self.name = "Linear"
         self.shape = (in_features, out_features)
         self.initializer = initializer
         self.weights = initializer((in_features, out_features))
@@ -122,11 +126,13 @@ class Linear(Module):
 
     def forward(self, x):
         self.inputs = x
-        linear_output = np.dot(self.inputs, self.weights) + self.biases
-        return linear_output
+        self.outputs = np.dot(self.inputs, self.weights) + self.biases
+        return self.outputs
 
     def backward(self, grad_output):
         # dL/dinputs
+        self.dweights = np.dot(self.inputs.T, grad_output)
+        self.dbiases = np.sum(grad_output, axis=0, keepdims=True)
         grads = np.dot(grad_output, self.weights.T)
         return grads
 

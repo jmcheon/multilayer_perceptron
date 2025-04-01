@@ -5,7 +5,7 @@ import sys
 path = os.path.join(os.path.dirname(__file__), "..", "")
 sys.path.insert(1, path)
 
-import config as config
+import classifications.config as config
 import mlp.optimizers as optimizers
 from mlp.metrics import accuracy_score
 from mlp.utils import (
@@ -14,10 +14,10 @@ from mlp.utils import (
     load_topology,
     split_dataset_save,
 )
-from Model import Model
-from ModelPlotter import ModelPlotter
-from ModelTrainer import ModelTrainer
-from NeuralNet import NeuralNet
+from classifications.Model import Model
+from classification.ModelPlotter import ModelPlotter
+from classifications.ModelTrainer import ModelTrainer
+from classifications.NeuralNet import NeuralNet
 
 
 def prediction(filename):
