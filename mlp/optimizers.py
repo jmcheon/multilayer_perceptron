@@ -46,8 +46,8 @@ class SGD(Optimizer):
             if not hasattr(layer, "weight_momentums"):
                 layer.weight_momentums = np.zeros_like(layer.weights)
                 # If there is no momentum array for weights
-                # The array doesn't exist for bias yet either.
-                layer.bias_momentums = np.zeros_like(layer.bias)
+                # The array doesn't exist for biases yet either.
+                layer.bias_momentums = np.zeros_like(layer.biases)
 
             # Build weight updates with momentum - take previous
             # updates multiplied by retain factor and update with
@@ -57,7 +57,7 @@ class SGD(Optimizer):
             )
             layer.weight_momentums = weight_updates
 
-            # Build bias updates
+            # Build biases updates
             bias_updates = self.momentum * layer.bias_momentums - self.current_learning_rate * dbias
             layer.bias_momentums = bias_updates
 
@@ -67,7 +67,7 @@ class SGD(Optimizer):
             bias_updates = -self.current_learning_rate * dbias
 
         layer.weights += weight_updates
-        layer.bias += bias_updates
+        layer.biases += bias_updates
 
 
 class RMSprop(Optimizer):
@@ -84,7 +84,7 @@ class RMSprop(Optimizer):
         # create them filled with zeros
         if not hasattr(layer, "weight_cache"):
             layer.weight_cache = np.zeros_like(layer.weights)
-            layer.bias_cache = np.zeros_like(layer.bias)
+            layer.bias_cache = np.zeros_like(layer.biases)
 
         # Update cache with squared current gradients
         layer.weight_cache = self.rho * layer.weight_cache + (1 - self.rho) * dweights**2
@@ -95,7 +95,7 @@ class RMSprop(Optimizer):
         layer.weights += (
             -self.current_learning_rate * dweights / (np.sqrt(layer.weight_cache) + self.epsilon)
         )
-        layer.bias += (
+        layer.biases += (
             -self.current_learning_rate * dbias / (np.sqrt(layer.bias_cache) + self.epsilon)
         )
 
@@ -117,8 +117,8 @@ class Adam(Optimizer):
         if not hasattr(layer, "weight_cache"):
             layer.weight_momentums = np.zeros_like(layer.weights)
             layer.weight_cache = np.zeros_like(layer.weights)
-            layer.bias_momentums = np.zeros_like(layer.bias)
-            layer.bias_cache = np.zeros_like(layer.bias)
+            layer.bias_momentums = np.zeros_like(layer.biases)
+            layer.bias_cache = np.zeros_like(layer.biases)
 
         # Update momentum  with current gradients
         layer.weight_momentums = self.beta_1 * layer.weight_momentums + (1 - self.beta_1) * dweights
@@ -145,7 +145,7 @@ class Adam(Optimizer):
             * weight_momentums_corrected
             / (np.sqrt(weight_cache_corrected) + self.epsilon)
         )
-        layer.bias += (
+        layer.biases += (
             -self.current_learning_rate
             * bias_momentums_corrected
             / (np.sqrt(bias_cache_corrected) + self.epsilon)

@@ -1,8 +1,7 @@
+import mlp.losses as losses
+import mlp.optimizers as optimizers
 import numpy as np
-
-import multilayer_perceptron.srcs.losses as losses
-import multilayer_perceptron.srcs.optimizers as optimizers
-from multilayer_perceptron.Model import Model
+from Model import Model
 
 
 class NeuralNet(Model):
@@ -21,6 +20,9 @@ class NeuralNet(Model):
         super().__init__(name)
         self._is_compiled = False
         self.optimizer = None
+
+    def __call__(self, x):
+        return self.forward(x)
 
     def forward(self, input_data):
         """

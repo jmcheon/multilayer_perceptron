@@ -4,24 +4,24 @@
     "type": "Dense",
     "shape": [30, 20],
     "activation": "ReLU",
-    "weights_initializer": "glorot_uniform"
+    "initializer": "glorot_uniform"
   },
   {
     "type": "Dense",
     "shape": [20, 10],
     "activation": "ReLU",
-    "weights_initializer": "glorot_uniform"
+    "initializer": "glorot_uniform"
   },
   {
     "type": "Dense",
     "shape": [10, 5],
     "activation": "ReLU",
-    "weights_initializer": "glorot_uniform"
+    "initializer": "glorot_uniform"
   },
   {
     "type": "Dense",
     "shape": [5, 2],
     "activation": "Softmax",
-    "weights_initializer": "glorot_uniform"
+    "initializer": "glorot_uniform"
   }
 ]

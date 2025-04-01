@@ -107,7 +107,7 @@ input_shape = 30
 output_shape = 1
 loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=30
 
-network = model.create_network([
+network = model([
         Dense(input_shape, 20, activation='relu'),
         Dense(20, 10, activation='relu'),
         Dense(10, 5, activation='relu'),
@@ -132,7 +132,7 @@ output_shape = 1
 loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=50
 
     model1 = Model()
-    model1.create_network([
+    model1([
         Dense(input_shape, 20, activation='relu'),
         Dense(20, 10, activation='relu'),
         Dense(10, 5, activation='relu'),
@@ -140,14 +140,14 @@ loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=50
         ])
 
     model2 = Model()
-    model2.create_network([
+    model2([
         Dense(input_shape, 15, activation='relu'),
         Dense(15, 5, activation='relu'),
         Dense(5, output_shape, activation='sigmoid')
         ])
 
     model3 = Model()
-    model3.create_network([
+    model3([
         Dense(input_shape, 5, activation='relu'),
         Dense(5, output_shape, activation='sigmoid')
         ])
@@ -168,7 +168,7 @@ output_shape = 1
 loss='binary_crossentropy', learning_rate=1e-3, batch_size=1, epochs=30
 
     model = Model()
-    model.create_network([
+    model([
         Dense(input_shape, 20, activation='relu'),
         Dense(20, 10, activation='relu'),
         Dense(10, 5, activation='relu'),

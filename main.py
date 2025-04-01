@@ -31,7 +31,7 @@ def prediction(filename):
 
     model = NeuralNet()
     # print("Net doc:", model.__doc__)
-    model.create_network(topology)
+    model(topology)
     model.set_parameters(list(parameters))
     y_pred = model.predict(x)
     y = model.one_hot_encode_labels(y)

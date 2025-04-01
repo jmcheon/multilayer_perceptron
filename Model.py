@@ -1,14 +1,15 @@
 import json
+from typing import List
 
 import numpy as np
-
-from multilayer_perceptron.srcs.layers import Dense, Layer
-from multilayer_perceptron.srcs.metrics import (
+from mlp.layers import Dense
+from mlp.metrics import (
     accuracy_score,
     f1_score,
     precision_score,
     recall_score,
 )
+from mlp.module import Module
 
 
 class Model:
@@ -16,14 +17,13 @@ class Model:
     Base Model Class.
 
     Methods:
-        create_network: Initializes the model architecture.
         save_topology: Saves the model topology to a file.
         save_parameters: Saves the model parameters to a file.
         save_history: Saves the model history to a file.
 
         get_topology: Retrieves the model topology.
         set_topology: Sets the model topology.
-        get_parameters: Retrieves the model parameters.
+        parameters: Retrieves the model parameters.
         set_parameters: Sets the model parameters.
 
         evaluate_metrics: Evaluates specified metrics on the model.
@@ -34,15 +34,7 @@ class Model:
         update_history: Updates the training history with new metrics.
     """
 
-    def __init__(self, name="Model"):
-        self.shape = None
-        self.layers = None
-        self.n_layers = 0
-        self.history = {}
-        self.metrics = []
-        self.name = name
-
-    def create_network(self, net, name=None):
+    def __init__(self, net, name="Model"):
         """
         Initializes the network architecture.
 
@@ -51,8 +43,15 @@ class Model:
         Returns:
             list: A list containing model topology.
         """
+        self.shape = None
+        self.layers = None
+        self.n_layers = 0
+        self.history = {}
+        self.metrics = []
+        self.name = name
+
         layers = None
-        if isinstance(net, list) and all(isinstance(layer, Layer) for layer in net):
+        if isinstance(net, list) and all(isinstance(layer, Module) for layer in net):
             layers = net
         elif isinstance(net, list) and all(isinstance(layer_data, dict) for layer_data in net):
             print("Creating a neural network...")
@@ -67,8 +66,6 @@ class Model:
             self.name = name
         self.history = {}
         self.metrics = []
-
-        return layers
 
     def save_topology(self, filepath) -> None:
         """
@@ -108,7 +105,7 @@ class Model:
         np.savez(filepath, *history)
         print(f"> Saving model history to '{filepath}.npz'")
 
-    def get_topology(self) -> list:
+    def get_topology(self) -> List:
         """
         Retrieves the model topology.
 
@@ -130,13 +127,13 @@ class Model:
                     "type": "Dense",
                     "shape": layer.shape,
                     "activation": f"{type(layer.activation).__name__}",
-                    "weights_initializer": f"{layer.weights_initializer}",
+                    "initializer": f"{layer.initializer}",
                 }
                 layers.append(layer_data)
         topology.extend(layers)
         return topology
 
-    def set_topology(self, topology) -> list:
+    def set_topology(self, topology) -> List:
         """
         Sets the model topology.
 
@@ -150,7 +147,7 @@ class Model:
                 self.name = data["name"]
                 self.n_layers = data["n_layers"]
             elif data["type"] == "Dense":
-                if "weights_initializer" not in data:
+                if "initializer" not in data:
                     layers.append(
                         Dense(data["shape"][0], data["shape"][1], activation=data["activation"])
                     )
@@ -160,7 +157,7 @@ class Model:
                             data["shape"][0],
                             data["shape"][1],
                             activation=data["activation"],
-                            weights_initializer=data["weights_initializer"],
+                            initializer=data["initializer"],
                         )
                     )
         self.layers = layers
@@ -168,7 +165,7 @@ class Model:
         self.shape = (layers[0].shape[0], layers[-1].shape[1])
         return layers
 
-    def get_parameters(self) -> list[np.ndarray]:
+    def parameters(self) -> List[np.ndarray]:
         """
         Retrieves the model parameters.
 
@@ -178,8 +175,7 @@ class Model:
         parameters = []
         for layer in self.layers:
             if isinstance(layer, Dense):
-                parameters.append(layer.weights)
-                parameters.append(layer.bias)
+                parameters.extend(layer.parameters())
         return parameters
 
     def set_parameters(self, initial_parameters) -> None:

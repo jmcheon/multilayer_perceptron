@@ -27,7 +27,7 @@ class ModelTrainer:
             raise TypeError("Invalid form of input to create a neural network.")
 
     def create_default_model(self, model: NeuralNet):
-        network = model.create_network(
+        network = model(
             [
                 Dense(self.shape[0], 20, activation="relu"),
                 Dense(20, 10, activation="relu"),
@@ -50,7 +50,7 @@ class ModelTrainer:
     def create_model(self, topology=None):
         model = NeuralNet()
         if topology:
-            network = model.create_network(topology)
+            network = model(topology)
         else:
             model = self.create_default_model(model)
         self.model_list.append(model)
