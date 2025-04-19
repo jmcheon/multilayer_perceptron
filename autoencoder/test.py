@@ -16,11 +16,11 @@ if __name__ == "__main__":
     y_train = y_train.reshape(-1, 1)
 
     model = AutoEncoder(784, 32)
-    optim = optimizers.Adam(learning_rate=1e-3)
+    optim = optimizers.Adam(learning_rate=1e-4)
     loss_fn = losses.BCELoss()
     trainer = Trainer(model, optim, loss_fn)
 
-    history = trainer.fit(x_train, y_train, batch_size=128, epochs=50)
+    history = trainer.fit(x_train, x_train, batch_size=128, epochs=10)
     plotter = ModelPlotter()
 
     plotter.set_model_histories([history])

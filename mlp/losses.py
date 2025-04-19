@@ -44,7 +44,7 @@ class BCELoss(Loss):
     def loss(self, y, y_pred):
         # Ensure predicted is a single probability value
         y_pred = np.clip(y_pred, self.eps, 1 - self.eps)
-        return 1 / y_pred.shape[0] * -np.sum(y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))
+        return np.mean(-(y * np.log(y_pred + self.eps) + (1 - y) * np.log(1 - y_pred + self.eps)))
 
     def dloss(self, y, y_pred):
         # Gradient of the loss with respect to the predicted value
