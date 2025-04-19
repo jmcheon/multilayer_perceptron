@@ -2,7 +2,8 @@ import numpy as np
 
 
 class Optimizer:
-    def __init__(self, learning_rate=1.0, decay=0.0, momentum=0.0):
+    def __init__(self, layers, learning_rate=1.0, decay=0.0, momentum=0.0):
+        self.layers = layers
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
@@ -18,8 +19,8 @@ class Optimizer:
     def update_params(self, layer):
         pass
 
-    def step(self, layers):
-        for layer in layers:
+    def step(self):
+        for layer in self.layers:
             if hasattr(layer, "weights"):
                 self.update_params(layer)
 
@@ -28,8 +29,8 @@ class Optimizer:
 
 
 class SGD(Optimizer):
-    def __init__(self, learning_rate=0.01, decay=0.0, momentum=0.0, name="SGD"):
-        super().__init__(learning_rate, decay, momentum)
+    def __init__(self, layers, learning_rate=0.01, decay=0.0, momentum=0.0, name="SGD"):
+        super().__init__(layers, learning_rate, decay, momentum)
         self.name = name
 
     def update_params(self, layer):
@@ -58,8 +59,10 @@ class SGD(Optimizer):
 
 
 class RMSprop(Optimizer):
-    def __init__(self, learning_rate=0.001, decay=0.0, epsilon=1e-7, rho=0.9, name="RMSprop"):
-        super().__init__(learning_rate, decay)
+    def __init__(
+        self, layers, learning_rate=0.001, decay=0.0, epsilon=1e-7, rho=0.9, name="RMSprop"
+    ):
+        super().__init__(layers, learning_rate, decay)
         self.epsilon = epsilon
         self.rho = rho
         self.name = name
@@ -88,9 +91,16 @@ class RMSprop(Optimizer):
 
 class Adam(Optimizer):
     def __init__(
-        self, learning_rate=0.001, decay=0.0, epsilon=1e-7, beta_1=0.9, beta_2=0.999, name="Adam"
+        self,
+        layers,
+        learning_rate=0.001,
+        decay=0.0,
+        epsilon=1e-7,
+        beta_1=0.9,
+        beta_2=0.999,
+        name="Adam",
     ):
-        super().__init__(learning_rate, decay)
+        super().__init__(layers, learning_rate, decay)
         self.epsilon = epsilon
         self.beta_1 = beta_1
         self.beta_2 = beta_2

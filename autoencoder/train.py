@@ -31,7 +31,7 @@ class Trainer:
                 grad_loss = self.loss_fn.dloss(y_batch, y_pred)
 
                 self.model.backward(grad_loss)
-                self.optimizer.step(self.model.layers)
+                self.optimizer.step()
 
             epoch_loss = np.mean(batch_losses)
             history["loss"].append(epoch_loss)

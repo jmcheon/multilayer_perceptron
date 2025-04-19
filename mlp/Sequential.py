@@ -17,20 +17,20 @@ class Sequential(Module):
 
         return x
 
-    def backward(self, grad_output):
-        for layer in reversed(self.layers):
-            grad_output = layer.backward(grad_output)
+    # def backward(self, grad_output):
+    #     for layer in reversed(self.layers):
+    #         grad_output = layer.backward(grad_output)
 
-        return grad_output
+    #     return grad_output
 
-    def parameters(self):
-        parameters = []
+    # def parameters(self):
+    #     parameters = []
 
-        for layer in self.layers:
-            if hasattr(layer, "weights"):
-                parameters += layer.parameters()
+    #     for layer in self.layers:
+    #         if hasattr(layer, "weights"):
+    #             parameters += layer.parameters()
 
-        return parameters
+    #     return parameters
 
     def zero_grad(self):
         for layer in self.layers:

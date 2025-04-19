@@ -44,10 +44,11 @@ if __name__ == "__main__":
     print(model)
     # print(model.layers[0].weights.shape)
     parameters = model.parameters()
+    print(parameters)
     # print(parameters[0].shape)
-    for i in range(len(parameters)):
-        print(parameters[i].shape)
-    optim = optimizers.SGD(learning_rate=1e-3)
+    # for i in range(len(parameters)):
+    #     print(i, parameters[i].shape)
+    optim = optimizers.SGD(parameters, learning_rate=1e-3)
     loss_fn = losses.BCELoss()
     trainer = Trainer(model, optim, loss_fn)
 

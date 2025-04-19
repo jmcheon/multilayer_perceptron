@@ -22,8 +22,59 @@ class AutoEncoder(mlp.Module):
 
         return x
 
-    def backward(self, grad_output):
-        for layer in reversed(self.layers):
-            grad_output = layer.backward(grad_output)
 
-        return grad_output
+class Encoder(mlp.Module):
+    def __init__(self, in_features, out_features):
+        super().__init__()
+        self.layers = [
+            mlp.Linear(in_features, 128),
+            mlp.ReLU(),
+            mlp.Linear(128, 64),
+            mlp.ReLU(),
+            mlp.Linear(64, out_features),
+            mlp.ReLU(),
+        ]
+
+    def forward(self, x):
+        for layer in self.layers:
+            x = layer(x)
+
+        return x
+
+
+class Decoder(mlp.Module):
+    def __init__(self, in_features, out_features):
+        super().__init__()
+        self.layers = [
+            mlp.Linear(out_features, 64),
+            mlp.ReLU(),
+            mlp.Linear(64, 128),
+            mlp.ReLU(),
+            mlp.Linear(128, in_features),
+            mlp.Sigmoid(),
+        ]
+
+    def forward(self, x):
+        for layer in self.layers:
+            x = layer(x)
+
+        return x
+
+
+class DeepAutoEncoder(mlp.Module):
+    def __init__(self, in_features, out_features):
+        super().__init__()
+
+        self.encoder = Encoder(in_features, out_features)
+        self.decoder = Decoder(in_features, out_features)
+
+        self.layers = [
+            self.encoder,
+            self.decoder,
+        ]
+
+    def forward(self, x):
+        for layer in self.layers:
+            x = layer(x)
+
+        return x

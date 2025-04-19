@@ -6,13 +6,23 @@ class Module:
         """
         Given upstream gradients, compute local gradients and return them to propagate further
         """
-        raise NotImplementedError
+        for layer in reversed(self.layers):
+            grad_output = layer.backward(grad_output)
+
+        return grad_output
 
     def parameters(self):
         """
-        Return a list of tensors (weights/biases)
+        Return a list of layers containing (weights/biases)
         """
-        return []
+        layers = []
+
+        for layer in self.layers:
+            if hasattr(layer, "layers"):
+                layers.extend(layer.layers)
+            else:
+                layers.append(layer)
+        return layers
 
     def zero_grad(self):
         pass
